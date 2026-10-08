@@ -9,10 +9,10 @@ body {
 }
 
 body {
-  background-image: url(../../assets/watermark.svg), radial-gradient(ellipse at 50% 28%, #1b1e22 0%, #101113 72%) !important;
-  background-repeat: no-repeat, no-repeat !important;
-  background-position: right 12px bottom 8px, center !important;
-  background-size: 250px 150px, auto !important;
+  background-image: radial-gradient(ellipse at 50% 28%, #1b1e22 0%, #101113 72%) !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: auto !important;
 }
 
 body > *:not(#gl):not(#atlasControls):not(script):not(style) {
@@ -201,28 +201,6 @@ body[data-count="1"] .atlas-groups {
   padding: 0 2px;
 }
 
-.atlas-device-label,
-.atlas-pad-label {
-  overflow: hidden;
-  width: 100%;
-  margin: 0;
-  text-align: center;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 16px;
-  line-height: 1.35;
-  font-weight: 600;
-}
-
-.atlas-device-label[data-slot="0"],
-.atlas-pad-label[data-slot="0"] {
-  color: #82a9ff;
-}
-
-.atlas-device-label[data-slot="1"],
-.atlas-pad-label[data-slot="1"] {
-  color: #f1a16f;
-}
 
 .atlas-phone-view {
   flex: 1;
@@ -258,13 +236,6 @@ body[data-count="1"] .atlas-groups {
   aspect-ratio: 1;
   touch-action: none;
   cursor: crosshair;
-}
-
-.atlas-pad-label {
-  display: none;
-  margin-bottom: 2px;
-  font-size: 14px;
-  font-weight: 500;
 }
 
 #secPad #pad,
@@ -403,10 +374,6 @@ body[data-count="1"] .atlas-groups {
     grid-column: 1 / -1;
   }
 
-  .atlas-device-label {
-    font-size: 15px;
-  }
-
   .atlas-phone-view {
     min-height: 0;
   }
@@ -439,11 +406,6 @@ body[data-count="1"] .atlas-groups {
     grid-column: 1 / -1;
   }
 
-  .atlas-pad-label {
-    display: block;
-    font-size: 13px;
-  }
-
   #secPad #pad,
   #secPad #atlasPad1 {
     width: min(100%, 170px);
@@ -461,8 +423,6 @@ body[data-count="1"] .atlas-groups {
 
 @media(max-width:760px){
  .atlas-phone-slot{height:380px}
- .atlas-device-label{white-space:normal;font-size:14px;min-height:36px;display:flex;align-items:center;justify-content:center}
- .atlas-pad-label{white-space:normal;font-size:12px;min-height:32px;display:flex;align-items:center;justify-content:center}
  .atlas-shared-toolbar{display:grid;grid-template-columns:auto minmax(0,1fr);gap:6px 8px}
  .atlas-shared-toolbar .pad-side{display:contents}
  .atlas-shared-toolbar>.sec-head{grid-column:1;grid-row:1}
@@ -474,3 +434,7 @@ body[data-count="1"] .atlas-groups {
  .atlas-privacy-toggle button{padding-inline:6px!important;font-size:12px!important}
  .atlas-embed-shell .mini-select{max-width:105px}
 }
+
+#atlasControls::after{content:"";position:absolute;z-index:10;right:12px;bottom:210px;width:min(300px,100%);height:36px;background:url(../../assets/watermark.svg?v=20261009) no-repeat center / 400px 240px;pointer-events:none;user-select:none}
+
+@media(max-width:760px){#atlasControls::after{bottom:160px}}

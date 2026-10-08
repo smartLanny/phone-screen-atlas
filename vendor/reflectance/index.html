@@ -6,25 +6,24 @@
 <meta name="color-scheme" content="dark">
 <title>手机屏幕反射率</title>
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="style.css?v=20261008-reflectance-viewer-2">
+<link rel="stylesheet" href="style.css?v=20261008-reflectance-paired-curves-3">
 </head>
 <body>
 <main id="app" aria-label="手机屏幕反射率">
   <header class="toolbar">
     <div id="conditions" class="conditions" aria-label="测量状态"></div>
     <div class="toolbar-actions">
-      <div id="kinds" class="segmented" role="group" aria-label="反射率类型"></div>
       <button id="measureInfo" class="info-button" type="button">测量信息</button>
     </div>
   </header>
-  <section class="chart-card" aria-label="全光谱反射率曲线">
+  <section class="chart-card" aria-label="全光谱反射率对比">
     <div id="chartWrap" class="chart-wrap">
       <svg id="chart" role="img" tabindex="0" aria-label="400 至 700 纳米反射率曲线"></svg>
       <div id="readout" class="readout" aria-live="off">
         <div id="readoutText" class="readout-text"></div>
         <button id="clearReadout" class="readout-close" type="button" aria-label="收起读数">×</button>
       </div>
-      <span class="watermark" aria-hidden="true">野生的装机宅</span>
+      <span class="watermark" aria-hidden="true">B 站野生的装机宅</span>
     </div>
     <div id="legend" class="legend" aria-label="曲线图例"></div>
   </section>
@@ -35,10 +34,10 @@
     <button id="closeInfo" class="close-button" type="button" aria-label="关闭">×</button>
   </div>
   <div class="dialog-body">
-    <p class="method-note">曲线来自仪器原始光谱，按 10 nm 采样点连线。全反射使用 SCI，漫反射使用 SCE；悬浮或点按查看原始采样值。</p>
+    <p class="method-note">曲线来自仪器原始光谱。全反射使用 SCI，漫反射使用 SCE；采样间隔和实际覆盖范围见各曲线信息。</p>
     <div id="curveDetails"></div>
   </div>
 </dialog>
-<script type="module" src="app.js?v=20261008-reflectance-viewer-2"></script>
+<script type="module" src="app.js?v=20261008-reflectance-paired-curves-3"></script>
 </body>
 </html>

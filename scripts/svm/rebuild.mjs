@@ -228,9 +228,9 @@ for (const entry of manifest) {
     grayKeys: grays.map(String),
     rows: raw.matrix.rows.length, columns: raw.matrix.cols.length,
     originalDataPoints: raw.data.length, storedExcludedPoints: raw.excluded?.length ?? 0,
-    displayedDataPoints: record.matrix.grid.reduce((sum, row) => sum + row.reduce((count, point, c) => {
+    displayedDataPoints: record.matrix.grid.reduce((sum, row, r) => sum + row.reduce((count, point, c) => {
       const nits = record.matrix.headerNits[c];
-      return Number.isFinite(nits) && nits >= 0 && nits <= 500 && point ? count + 1 : count;
+      return record.matrix.rows[r] >= 15 && Number.isFinite(nits) && nits > 0 && nits <= 500 && point ? count + 1 : count;
     }, 0), 0),
     sourceSha256: digest(bytes),
   };

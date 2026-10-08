@@ -49,6 +49,7 @@ assert.equal(state.tab, 'chart2d'); assert.equal(state.view, 'top');
 assert.equal(state.activeId, `bundled:${files[0]}`); assert.equal(state.compareId, `bundled:${files[1]}`);
 assert.equal(state.hiddenIds.length, 0); assert.equal(state.compareExtraIds.length, 0);
 assert.equal(state.maxNits, 500);
+assert.equal(state.clipLowGray, true);
 assert.equal(state.overlays.title, false); assert.equal(state.overlays.values, false);
 assert.equal(state.overlays.axes, true); assert.equal(state.overlays.colorbar, true); assert.equal(state.overlays.contours, true);
 assert.equal(messages.at(-1).data.type, 'atlas-svm-ready');
@@ -61,7 +62,7 @@ for (const bad of [
   { ...input, files: ['../attack.json'] }, { ...input, files: [files[0], files[0]] },
   { ...input, files: [] }, { ...input, files: [...files, files[0]] },
   { ...input, view: 'invalid' }, { ...input, terrainView: 'invalid' },
-  { ...input, sliceGray: NaN }, { ...input, sliceGray: 256 },
+  { ...input, sliceGray: NaN }, { ...input, sliceGray: 256 }, { ...input, sliceGray: 14 }, { ...input, sliceGray: 0 },
   { ...input, sliceNits: 0 }, { ...input, sliceNits: 501 }, { ...input, sliceNits: Infinity },
   { ...input, denoise: 1 }, { ...input, layout: 'invalid' },
   { ...input, sliceMode: 'invalid' }, { ...input, hiddenIds: [] },

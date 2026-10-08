@@ -19,6 +19,9 @@ const replacements = {
   'svm-full-range-visualizer': 1, kv: 1, 'keyval-store': 1, keyval: 1,
 };
 let html = original.toString('utf8');
+const graySlider = 'value:e.sliceGray,min:0,max:255';
+assert.equal(html.split(graySlider).length - 1, 1, 'Expected the original gray slider configuration once');
+html = html.replace(graySlider, 'value:e.sliceGray,min:15,max:255');
 for (const [key, expected] of Object.entries(replacements)) {
   const literal = JSON.stringify(key);
   const count = html.split(literal).length - 1;

@@ -38,7 +38,7 @@
       ['view', views], ['sliceMode', ['gray', 'brightness']],
       ['terrainView', ['perspective', 'top', 'front', 'side']], ['layout', ['single', 'sideBySide', 'diff']],
     ]) if (key in data && !values.includes(data[key])) return false;
-    if ('sliceGray' in data && !inRange(data.sliceGray, 0, 255)) return false;
+    if ('sliceGray' in data && !inRange(data.sliceGray, 15, 255)) return false;
     if ('sliceNits' in data && !inRange(data.sliceNits, 0.01, 500)) return false;
     if ('denoise' in data && typeof data.denoise !== 'boolean') return false;
     return true;
@@ -56,6 +56,7 @@
       layout: ids.length === 1 ? 'single' : (data.layout ?? 'sideBySide'),
       presenting: false,
       maxNits: 500,
+      clipLowGray: true,
       overlays: { ...state.overlays, values: false, title: false, axes: true, colorbar: true, contours: true },
     };
     if ('view' in data) next.tab = data.view;
@@ -73,7 +74,7 @@
     applying = true;
     try {
       store.setState({
-        tab: 'scene3d', view: 'top', maxNits: 500,
+        tab: 'scene3d', view: 'top', maxNits: 500, clipLowGray: true, sliceGray: 255,
         overlays: { ...store.getState().overlays, values: false, title: false, axes: true, colorbar: true, contours: true },
       });
     } finally { applying = false; }

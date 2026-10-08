@@ -1,8 +1,12 @@
 const DATA_URL='../../data/reflectance/index.json?v=20261008-xml';
 const PHONE_COLORS=['#86a2ff','#f0aa70'];
+const CURVE_TYPES=[
+  {kind:'total',label:'全反射 SCI',method:'SCI'},
+  {kind:'diffuse',label:'漫反射 SCE',method:'SCE'},
+];
 const $=id=>document.getElementById(id);
 const esc=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-const state={phones:['xiaomi-18-pro-max'],names:['小米 18 Pro Max'],kind:'total',conditions:{}};
+const state={phones:['xiaomi-18-pro-max'],names:['小米 18 Pro Max'],conditions:{}};
 let indexData=null,pendingSet=null,parentSetReceived=false,chartSize={width:0,height:0},pointerLocked=false,lastHeight=0;
 let chartBounds=null;
 
@@ -50,11 +54,10 @@ function normalizeSet(payload){
   state.phones=uniquePhones;
   state.names=uniquePhones.map((id,index)=>Array.isArray(payload.names)&&typeof payload.names[index]==='string'?payload.names[index]:findPhone(id)?.name||id);
   state.conditions=conditions;
-  state.kind=payload.kind==='diffuse'?'diffuse':'total';
   render();
   if(didFallback)sendChange();
 }
-function sendChange(){sendParent({type:'atlas-reflectance-change',kind:state.kind,conditions:{...state.conditions}});}
+function sendChange(){sendParent({type:'atlas-reflectance-change',conditions:{...state.conditions}});}
 
 function renderConditions(){
   const host=$('conditions');
@@ -64,10 +67,15 @@ function renderConditions(){
     return `<div class="condition-group"><span class="condition-phone">${esc(name)}</span><div class="condition-buttons" role="group" aria-label="${esc(name)}测量状态">${record.conditions.map(item=>`<button type="button" data-condition-phone="${esc(id)}" data-condition="${esc(item.id)}" class="${item.id===condition?.id?'active':''}" aria-pressed="${item.id===condition?.id}">${esc(conditionLabel(item))}</button>`).join('')}</div></div>`;
   }).join('');
 }
-function renderKinds(){
-  $('kinds').innerHTML=[['total','全反射'],['diffuse','漫反射']].map(([kind,label])=>`<button type="button" data-kind="${kind}" class="${state.kind===kind?'active':''}" aria-pressed="${state.kind===kind}">${label}</button>`).join('');
+function curveFor(selection,kind){return conditionFor(selection.id)?.curves?.[kind]||null;}
+function curveEntries(){
+  return selectedPhones().flatMap(selection=>CURVE_TYPES.map(type=>({
+    selection,
+    type,
+    condition:conditionFor(selection.id),
+    curve:curveFor(selection,type.kind),
+  })));
 }
-function curveFor(selection){return conditionFor(selection.id)?.curves?.[state.kind]||null;}
 function curveSegments(curve){
   const samples=curve.samples||[];
   const spans=Array.isArray(curve.coverageSpansNm)&&curve.coverageSpansNm.length?curve.coverageSpansNm:[curve.rangeNm];
@@ -95,20 +103,27 @@ function pathForCurve(segments,bounds,scale){
 }
 function colorFor(selection){return PHONE_COLORS[selection.slot]||PHONE_COLORS[0];}
 function displayScale(){
-  const step=state.kind==='total'?1:0.5;
-  const values=indexData.phones.flatMap(phone=>phone.conditions.flatMap(condition=>condition.curves?.[state.kind]?.samples?.map(sample=>sample[1])||[]));
-  const maximum=values.length?Math.ceil(Math.max(...values)*1.1/step)*step:indexData.reflectanceRangePercent[1];
+  const values=curveEntries().flatMap(({curve})=>curve?.samples?.map(sample=>sample[1])||[]);
+  const rawMaximum=Math.max(values.length?Math.max(...values)*1.08:(indexData.reflectanceRangePercent?.[1]||10),0.1);
+  const roughStep=Math.max(rawMaximum,0.1)/6;
+  const magnitude=10**Math.floor(Math.log10(roughStep));
+  const ratio=roughStep/magnitude;
+  const factor=ratio<=1.25?1:ratio<=2.5?2:ratio<=6.25?5:10;
+  const step=Number((factor*magnitude).toPrecision(6));
+  const maximum=Number((Math.ceil(rawMaximum/step)*step).toPrecision(6));
   return {minimum:0,maximum,step};
 }
 function renderLegend(){
   const host=$('legend');
-  const selections=selectedPhones();
-  const curves=selections.map(selection=>({selection,condition:conditionFor(selection.id),curve:curveFor(selection)}));
-  host.innerHTML=curves.map(({selection,condition,curve})=>{
+  host.innerHTML=selectedPhones().map(selection=>{
     const color=colorFor(selection);
-    const conditionText=condition?`<span class="legend-meta">${esc(conditionLabel(condition))}</span>`:'';
-    if(!curve)return `<div class="legend-item"><span class="legend-swatch ${selection.slot?'dashed':''}" style="color:${color}"></span><span class="legend-name">${esc(selection.name)}</span>${conditionText}<span class="legend-missing">${selection.record?`无${state.kind==='total'?'全反射':'漫反射'}曲线`:'反射率待测'}</span></div>`;
-    return `<div class="legend-item"><span class="legend-swatch ${selection.slot?'dashed':''}" style="color:${color}"></span><span class="legend-name">${esc(selection.name)}</span>${conditionText}</div>`;
+    const condition=conditionFor(selection.id);
+    const conditionText=condition?`<span class="legend-condition">${esc(conditionLabel(condition))}</span>`:'';
+    const types=CURVE_TYPES.map(type=>{
+      const curve=curveFor(selection,type.kind);
+      return `<div class="legend-item" title="${esc(selection.name)} · ${type.label}"><span class="legend-swatch ${type.kind}" style="--swatch:${color}"></span><span class="legend-type">${type.label}</span>${curve?'':`<span class="legend-missing">缺测</span>`}</div>`;
+    }).join('');
+    return `<div class="legend-device" style="--phone-color:${color}"><div class="legend-device-head"><span class="legend-phone-mark" aria-hidden="true"></span><span class="legend-name">${esc(selection.name)}</span>${conditionText}</div><div class="legend-types">${types}</div></div>`;
   }).join('');
 }
 function svgEl(name,attrs={},content=''){
@@ -123,19 +138,22 @@ function renderChart(){
   while(svg.firstChild)svg.removeChild(svg.firstChild);
   svg.setAttribute('viewBox',`0 0 ${width} ${height}`);
   const scale=displayScale();
-  svg.setAttribute('aria-label',`${state.kind==='total'?'全反射':'漫反射'}，波长 ${indexData.wavelengthRangeNm[0]} 至 ${indexData.wavelengthRangeNm[1]} 纳米，反射率 ${scale.minimum} 至 ${scale.maximum}%`);
+  svg.setAttribute('aria-label',`全反射 SCI 与漫反射 SCE，波长 ${indexData.wavelengthRangeNm[0]} 至 ${indexData.wavelengthRangeNm[1]} 纳米，反射率 ${scale.minimum} 至 ${scale.maximum}%`);
   const margin={left:54,right:17,top:25,bottom:64};
   const plot={left:margin.left,top:margin.top,width:width-margin.left-margin.right,height:height-margin.top-margin.bottom};
   const [waveMin,waveMax]=indexData.wavelengthRangeNm;
   const {minimum:percentMin,maximum:percentMax,step:percentStep}=scale;
+  const percentDecimals=Math.min(4,(String(percentStep).split('.')[1]||'').length);
   const x=nm=>plot.left+(nm-waveMin)/(waveMax-waveMin)*plot.width;
   const y=percent=>plot.top+(percentMax-percent)/(percentMax-percentMin)*plot.height;
   chartBounds={...plot,x,y};
   const grid=svgEl('g',{'aria-hidden':'true'});
-  for(let percent=percentMin;percent<=percentMax;percent+=percentStep){
+  const percentTicks=Math.round((percentMax-percentMin)/percentStep);
+  for(let index=0;index<=percentTicks;index++){
+    const percent=Number((percentMin+index*percentStep).toPrecision(8));
     const yy=y(percent);
     grid.append(svgEl('line',{x1:plot.left,y1:yy,x2:plot.left+plot.width,y2:yy,class:'grid-line'}));
-    const label=Number.isInteger(percent)?`${percent}`:percent.toFixed(1);
+    const label=Number.isInteger(percent)?`${percent}`:percent.toFixed(percentDecimals);
     grid.append(svgEl('text',{x:plot.left-9,y:yy+3.5,'text-anchor':'end',class:'tick-text'},label));
   }
   for(let nm=waveMin;nm<=waveMax;nm+=50){
@@ -154,10 +172,10 @@ function renderChart(){
   [['0%','#7e4dff'],['18%','#2868ff'],['38%','#16b9d3'],['55%','#47bc70'],['73%','#e4d844'],['86%','#f28a30'],['100%','#e54848']].forEach(([offset,color])=>spectrum.append(svgEl('stop',{offset,'stop-color':color})));
   gradient.append(spectrum);svg.append(gradient);
   svg.append(svgEl('rect',{x:plot.left,y:plot.top+plot.height+29,width:plot.width,height:7,rx:3.5,fill:'url(#spectrum)',opacity:'.8','aria-hidden':'true'}));
-  const curves=selectedPhones().map(selection=>({selection,curve:curveFor(selection)})).filter(entry=>entry.curve);
-  for(const {selection,curve}of curves){
+  const curves=curveEntries().filter(entry=>entry.curve);
+  for(const {selection,type,curve}of curves){
     const segments=curveSegments(curve);
-    svg.append(svgEl('path',{d:pathForCurve(segments,plot,scale),class:`curve ${selection.slot?'secondary':''}`,stroke:colorFor(selection)}));
+    svg.append(svgEl('path',{d:pathForCurve(segments,plot,scale),class:`curve ${type.kind}`,stroke:colorFor(selection)}));
     for(const [[nm,value]]of segments.filter(segment=>segment.length===1))svg.append(svgEl('circle',{cx:x(nm),cy:y(value),r:2.1,fill:colorFor(selection)}));
   }
   svg.append(svgEl('line',{id:'crosshair',x1:0,y1:plot.top,x2:0,y2:plot.top+plot.height,class:'crosshair',visibility:'hidden'}));
@@ -182,7 +200,7 @@ function valueAt(curve,nm){
 }
 function updateReadout(nm,pinned=false){
   const bounded=Math.max(indexData.wavelengthRangeNm[0],Math.min(indexData.wavelengthRangeNm[1],nm));
-  const step=selectedPhones().map(curveFor).find(Boolean)?.sampleStepNm||10;
+  const step=curveEntries().map(entry=>entry.curve).find(Boolean)?.sampleStepNm||10;
   const wavelength=Math.round(bounded/step)*step;
   const crosshair=$('chart').querySelector('#crosshair');
   const dots=$('chart').querySelector('#focusDots');
@@ -190,13 +208,13 @@ function updateReadout(nm,pinned=false){
   const xx=chartBounds.x(wavelength);
   crosshair.setAttribute('x1',xx);crosshair.setAttribute('x2',xx);crosshair.setAttribute('visibility','visible');
   while(dots.firstChild)dots.removeChild(dots.firstChild);
-  const values=selectedPhones().map(selection=>{
-    const curve=curveFor(selection),value=valueAt(curve,wavelength);
+  const values=curveEntries().map(({selection,type,curve})=>{
+    const value=valueAt(curve,wavelength);
     if(curve&&value!==null){
       dots.append(svgEl('circle',{cx:xx,cy:chartBounds.y(value),r:4.4,fill:colorFor(selection),class:'focus-dot'}));
-      return `<span class="readout-value" title="${esc(selection.name)}" style="--swatch:${colorFor(selection)}">${value.toFixed(2)}%</span>`;
+      return `<span class="readout-value" title="${esc(selection.name)} · ${type.label}" style="--swatch:${colorFor(selection)}"><span class="readout-type">${type.method}</span><strong>${value.toFixed(2)}%</strong></span>`;
     }
-    return `<span class="readout-value" title="${esc(selection.name)}" style="--swatch:${colorFor(selection)}">缺测</span>`;
+    return `<span class="readout-value missing" title="${esc(selection.name)} · ${type.label}" style="--swatch:${colorFor(selection)}"><span class="readout-type">${type.method}</span><strong>缺测</strong></span>`;
   });
   dots.setAttribute('visibility','visible');
   $('readoutText').innerHTML=`<strong>${wavelength} nm</strong><span class="readout-values">${values.join('')}</span>`;
@@ -224,18 +242,19 @@ function wavelengthAtPointer(event){
   return waveMin+(viewX-left)/width*(waveMax-waveMin);
 }
 function renderDetails(){
-  const rows=selectedPhones().map(selection=>{
-    const condition=conditionFor(selection.id),curve=curveFor(selection);
-    if(!selection.record)return `<section class="curve-detail"><h3>${esc(selection.name)}</h3><p>当前没有反射率测量数据。</p></section>`;
-    if(!curve)return `<section class="curve-detail"><h3>${esc(selection.name)} · ${esc(conditionLabel(condition))} · ${state.kind==='total'?'全反射':'漫反射'}</h3><p>没有这一状态和类型的测量数据。</p></section>`;
+  const rows=curveEntries().map(({selection,type,condition,curve})=>{
+    const heading=`${esc(selection.name)} · ${esc(conditionLabel(condition))} · ${type.label}`;
+    if(!curve)return `<section class="curve-detail missing"><h3>${heading}</h3><p>当前测量状态缺少这类曲线。</p></section>`;
     const sourcePath=typeof curve.sourceFile==='string'?`../../data/reflectance/${curve.sourceFile}`:'';
     const source=sourcePath?`<a class="source-link" href="${esc(sourcePath)}" target="_blank" rel="noopener">查看原始光谱数据</a>`:'';
-    return `<section class="curve-detail"><h3>${esc(selection.name)} · ${esc(condition.label||conditionLabel(condition))} · ${state.kind==='total'?'全反射':'漫反射'}</h3><p>仪器原始光谱 · ${esc(curve.method)} · ${curve.sampleStepNm} nm 采样。</p><p class="detail-muted">实际覆盖：${(curve.coverageSpansNm||[]).map(span=>`${span[0]}–${span[1]} nm`).join('、')||'未记录'}。悬浮或点按显示原始采样点。</p>${source}</section>`;
+    const coverage=(curve.coverageSpansNm||[]).map(span=>`${span[0]}–${span[1]} nm`).join('、')||'未记录';
+    return `<section class="curve-detail"><h3>${heading}</h3><p>仪器原始光谱 · ${esc(curve.method)} · ${curve.sampleStepNm} nm 采样。</p><p class="detail-muted">实际覆盖：${coverage}。悬浮或点按显示原始采样点；覆盖段外不补线。</p>${source}</section>`;
   });
   $('curveDetails').innerHTML=rows.join('');
 }
 function render(){
-  renderConditions();renderKinds();renderLegend();renderChart();renderDetails();
+  $('chartWrap').dataset.phoneCount=String(state.phones.length);
+  renderConditions();renderLegend();renderChart();renderDetails();
   clearReadout(true);
   scheduleHeight();
 }
@@ -257,19 +276,10 @@ function bindEvents(){
     state.conditions[button.dataset.conditionPhone]=button.dataset.condition;
     render();sendChange();
   });
-  $('kinds').addEventListener('click',event=>{
-    const button=event.target.closest('[data-kind]');
-    if(!button||button.dataset.kind===state.kind)return;
-    state.kind=button.dataset.kind;
-    render();sendChange();
-  });
   $('measureInfo').addEventListener('click',()=>{$('infoDialog').showModal();scheduleHeight();});
   $('closeInfo').addEventListener('click',()=>$('infoDialog').close());
   $('infoDialog').addEventListener('click',event=>{if(event.target===$('infoDialog'))$('infoDialog').close();});
-  $('clearReadout').addEventListener('click',()=>{
-    pointerLocked=false;$('readout').classList.remove('show','pinned');$('readout').setAttribute('aria-live','off');
-    $('chart').querySelector('#crosshair')?.setAttribute('visibility','hidden');$('chart').querySelector('#focusDots')?.setAttribute('visibility','hidden');
-  });
+  $('clearReadout').addEventListener('click',()=>clearReadout(true));
   const chart=$('chart');
   chart.addEventListener('pointermove',event=>{
     if(event.pointerType==='touch'||pointerLocked)return;

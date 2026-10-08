@@ -211,15 +211,10 @@ bridge = '''
     document.body.dataset.compare = String(ids.length > 1);
     ids.forEach((id, i) => {
       const profile = byId(id), slot = atlasPhoneSlots[i] ?? i;
-      const phoneLabel = $('atlasDeviceLabel' + i), padLabel = $('atlasPadLabel' + i);
       const group = $('atlasGroup' + i), toggle = $('atlasPrivacy' + i);
       group.hidden = false;
       group.dataset.slot = String(slot);
-      phoneLabel.dataset.slot = String(slot);
-      padLabel.dataset.slot = String(slot);
       const displayDevice = profile.device.replace(/ GH3$/, '');
-      phoneLabel.textContent = displayDevice;
-      padLabel.textContent = displayDevice;
       toggle.setAttribute('aria-label', `${displayDevice}防窥状态`);
       $(i === 0 ? 'pad' : 'atlasPad1').setAttribute('aria-label', `${displayDevice}观看方向：拖动设置眼睛相对屏幕的位置`);
       const off = variant(profile.device, false), on = variant(profile.device, true);
@@ -317,7 +312,6 @@ embed_layout = f'''      <div class="atlas-embed-shell">
         <div class="atlas-groups" id="atlasGroups">
           <div class="atlas-device-group" id="atlasGroup0">
             <div class="atlas-phone-slot" id="atlasPhoneSlot0">
-              <h3 class="atlas-device-label" id="atlasDeviceLabel0"></h3>
               <div class="atlas-phone-view" id="atlasPhoneView0"></div>
               <div class="seg atlas-privacy-toggle" id="atlasPrivacy0" role="group" aria-label="防窥状态">
                 <button type="button" data-atlas-slot="0" data-atlas-privacy="0" aria-pressed="true">默认</button>
@@ -325,13 +319,11 @@ embed_layout = f'''      <div class="atlas-embed-shell">
               </div>
             </div>
             <div class="pad-wrap atlas-pad-card" id="atlasPadCard0">
-              <h3 class="atlas-pad-label" id="atlasPadLabel0"></h3>
               <canvas id="pad" aria-label="观看方向：拖动设置眼睛相对屏幕的位置"></canvas>
             </div>
           </div>
           <div class="atlas-device-group" id="atlasGroup1">
             <div class="atlas-phone-slot" id="atlasPhoneSlot1">
-              <h3 class="atlas-device-label" id="atlasDeviceLabel1"></h3>
               <div class="atlas-phone-view" id="atlasPhoneView1"></div>
               <div class="seg atlas-privacy-toggle" id="atlasPrivacy1" role="group" aria-label="防窥状态">
                 <button type="button" data-atlas-slot="1" data-atlas-privacy="0" aria-pressed="true">默认</button>
@@ -339,7 +331,6 @@ embed_layout = f'''      <div class="atlas-embed-shell">
               </div>
             </div>
             <div class="pad-wrap atlas-pad-card" id="atlasPadCard1">
-              <h3 class="atlas-pad-label" id="atlasPadLabel1"></h3>
               <canvas id="atlasPad1" aria-label="观看方向：拖动设置眼睛相对屏幕的位置"></canvas>
               <div class="pad-read" id="atlasPadRead1"></div>
             </div>
@@ -350,11 +341,11 @@ html = html[:pad_start] + embed_layout + html[pad_end:]
 html = replace_once(
     html,
     '<link rel="stylesheet" href="style.css?v=15">',
-    '<link rel="stylesheet" href="style.css?v=15">\n<link rel="stylesheet" href="embed-style.css?v=20261008-angle4">\n<script>window.ATLAS_EMBED=true;</script>',
+    '<link rel="stylesheet" href="style.css?v=15">\n<link rel="stylesheet" href="embed-style.css?v=20261008-angle5">\n<script>window.ATLAS_EMBED=true;</script>',
 )
 html = replace_once(
     html,
     '<script src="app.js?v=16"></script>',
-    '<aside id="atlasControls" aria-label="可视角度与观看方向"></aside><script src="embed-app.js?v=20261008-angle4"></script>',
+    '<aside id="atlasControls" aria-label="可视角度与观看方向"></aside><script src="embed-app.js?v=20261008-angle5"></script>',
 )
 (root / 'embed.html').write_text(html)

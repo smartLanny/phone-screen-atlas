@@ -216,7 +216,7 @@ function renderCard(phone) {
 
   const watermark = document.createElement("span");
   watermark.className = "watermark";
-  watermark.textContent = "野生的装机宅";
+  watermark.textContent = "B 站野生的装机宅";
   watermark.setAttribute("aria-hidden", "true");
   figure.append(watermark);
   card.append(head, figure);

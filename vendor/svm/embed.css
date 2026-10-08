@@ -25,17 +25,16 @@ body { overflow: hidden; background: #101113; }
 .bg-surface-1 { background-color: #101113 !important; }
 [data-testid="main"], [data-testid="stage-outer"], [data-testid="stage"] { background-color: #101113 !important; }
 
-/* A reserved outer band keeps the single background mark clear of the original canvas. */
-[data-testid="stage-outer"] { top: 28px !important; }
+/* One translucent mark stays within the chart and does not intercept input. */
 body::after {
   content: "";
   position: fixed;
-  top: 0;
-  right: 0;
-  left: 0;
-  height: 28px;
+  top: 10px;
+  right: 10px;
+  width: min(300px, 100%);
+  height: 36px;
   z-index: 40;
-  background: #101113 url('../../assets/watermark.svg') no-repeat right -100px top -96px / 400px 240px;
+  background: url('../../assets/watermark.svg?v=20261009') no-repeat center / 400px 240px;
   pointer-events: none;
   user-select: none;
 }

@@ -1472,15 +1472,10 @@
     document.body.dataset.compare = String(ids.length > 1);
     ids.forEach((id, i) => {
       const profile = byId(id), slot = atlasPhoneSlots[i] ?? i;
-      const phoneLabel = $('atlasDeviceLabel' + i), padLabel = $('atlasPadLabel' + i);
       const group = $('atlasGroup' + i), toggle = $('atlasPrivacy' + i);
       group.hidden = false;
       group.dataset.slot = String(slot);
-      phoneLabel.dataset.slot = String(slot);
-      padLabel.dataset.slot = String(slot);
       const displayDevice = profile.device.replace(/ GH3$/, '');
-      phoneLabel.textContent = displayDevice;
-      padLabel.textContent = displayDevice;
       toggle.setAttribute('aria-label', `${displayDevice}防窥状态`);
       $(i === 0 ? 'pad' : 'atlasPad1').setAttribute('aria-label', `${displayDevice}观看方向：拖动设置眼睛相对屏幕的位置`);
       const off = variant(profile.device, false), on = variant(profile.device, true);

@@ -113,7 +113,7 @@ button { font: inherit; }
 .metric { color: #b7b9be; font-size: 12px; }
 .metric strong { color: #f0f1f2; font-size: 14px; font-weight: 620; font-variant-numeric: tabular-nums; }
 .figure-note { margin: 3px 0 0; color: #a0a2a7; font-size: 11px; text-align: center; }
-.watermark { position: absolute; right: 13px; bottom: 9px; color: #85878c; font-size: 14px; font-weight: 550; letter-spacing: .08em; line-height: 18px; pointer-events: none; }
+.watermark { position: absolute; right: 13px; top: 55%; color: rgb(255 255 255 / 22%); font-size: 18px; font-weight: 550; letter-spacing: .04em; line-height: 24px; pointer-events: none; }
 .empty-state { display: grid; min-height: clamp(330px, 35vw, 550px); place-items: center; color: #c0c2c6; font-size: 14px; }
 .empty-state span { padding: 7px 11px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); }
 

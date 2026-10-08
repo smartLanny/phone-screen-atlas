@@ -61,9 +61,9 @@ for (let i = 0; i < index.records.length; i++) {
   const m = d.record.matrix;
   assert.deepEqual(m.rows, raw.matrix.rows);
   assert.deepEqual(m.cols, raw.matrix.cols);
-  const displayedDataPoints = m.grid.reduce((sum, row) => sum + row.reduce((count, point, c) => {
+  const displayedDataPoints = m.grid.reduce((sum, row, r) => sum + row.reduce((count, point, c) => {
     const nits = m.headerNits[c];
-    return Number.isFinite(nits) && nits >= 0 && nits <= 500 && point ? count + 1 : count;
+    return m.rows[r] >= 15 && Number.isFinite(nits) && nits > 0 && nits <= 500 && point ? count + 1 : count;
   }, 0), 0);
   assert.equal(entry.displayedDataPoints, displayedDataPoints, `${entry.file}: displayedDataPoints`);
   totals.displayedDataPoints += displayedDataPoints;

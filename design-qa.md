@@ -58,3 +58,22 @@ Final combined visual comparison finds no remaining actionable P0/P1/P2 mismatch
 - [x] Complete browser interaction and console checks.
 
 Residual gap: the generated source board has no exact mobile counterpart for every lower section. Those sections were checked against the requested native behavior and their real data rather than inferred mock pixels.
+
+
+## Latest follow-up: combined spectra, G15 floor and identity cleanup
+
+final result: passed
+
+Source visual truth: `docs/layout-before-followup.png` (user attachment, 1524 × 1746 pixels), with the explicit requests to remove repeated angle model headings, combine SCI/SCE, enforce G15, and use a larger translucent “B 站野生的装机宅” mark. These requests supersede the earlier mock's duplicate labels and margin-only watermark placement.
+
+Final implementation evidence:
+
+- `docs/reduced-labels-desktop.png`, 1440 × 1024 CSS/physical pixels at density 1, Xiaomi vs Huawei, front/light/default.
+- `docs/reduced-labels-mobile.png`, 390 × 844 at density 1, same models and state. The user screenshot and revised mobile capture were opened in the same comparison input; source CSS dimensions are unknown, so this is a hierarchy/content comparison rather than pixel matching.
+- `docs/combined-reflectance-desktop.png`, 1440 × 1024; `docs/combined-reflectance-mobile.png`, 390 × 844, Xiaomi vs iPhone, SCI/SCE shown together, mobile with four pinned raw readings.
+
+Required surfaces rechecked: existing system typography and dark palette remain; removing repeated headings gives the phones more room without changing native geometry; phone colors plus solid SCI/dashed SCE clearly identify four curves on a common percent scale; original 31-point spectra and native WebGL/SVM assets remain intact; concise controls and exact requested watermark text are legible. The translucent chart marks do not intercept input, and the reflectance mark remains visible while the readout is pinned. No actionable P0/P1/P2 visual issue remains.
+
+Browser acceptance: an incoming gray=0 URL normalized to gray=15; the native slider's Home and ArrowLeft stop at G15. The embedded native Slider uses min=15 rather than a copied or DOM-remapped control. All chart views force the original low-gray clip. Native data remain unchanged. Desktop/mobile horizontal overflow is zero, reflection has four 31-point paths and four correctly typed raw readings, and the angle iframe has no redundant heading. Console error/warning check is empty.
+
+Independent review: `../../work/redesign/combined-reflectance-gray-review.md` verified 964 dual-phone condition sets and 2,892 four-value readouts; native clipped point counts equal the published 4,707. `../../work/redesign/chart-watermark-final-review.md` verified the final source hashes, overlay input transparency, G15 protocol, generation reproducibility and unchanged measurements. Full project check passed.

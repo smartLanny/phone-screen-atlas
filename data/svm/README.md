@@ -4,7 +4,7 @@
 
 ## 文件入口
 
-- `index.json`：`{schemaVersion, fixedGrayKeys, sourceFile, records}`，`records` 保持原 manifest 次序；每条含 `device`、`mode`、`id`、`rawFile`、`processedFile`、`displayedDataPoints` 等。`displayedDataPoints` 按处理后矩阵的 G255 `headerNits` 轴计算 `0–500 nits` 内的有效格数，和原 bundle 的 `maxNits: 500` 口径一致。
+- `index.json`：`{schemaVersion, fixedGrayKeys, sourceFile, records}`，`records` 保持原 manifest 次序；每条含 `device`、`mode`、`id`、`rawFile`、`processedFile`、`displayedDataPoints` 等。`displayedDataPoints` 按处理后矩阵的 G255 `headerNits` 轴计算 `0–500 nits` 且 `G15–G255` 内的有效格数，和原 bundle 的 `maxNits: 500` 口径一致。
 - `manifest.original.json`：源 manifest 原始字节。
 - `raw/<file>.json`：源记录原始字节，保留其 `excluded` 字段。
 - `processed/<file>.json`：线上 `processRecord(raw, {denoise:true})` 的结果与状态；未新增统计综合分或健康排名。

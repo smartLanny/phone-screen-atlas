@@ -7,7 +7,7 @@ const PHONES=[
   {id:'huawei-mate-80-rs',name:'华为 Mate 80 RS'},
   {id:'huawei-mate-70-air',name:'华为 Mate 70 Air'},
 ];
-const defaults=()=>({phone:PHONES[0].id,compare:'',theta:0,psi:0,pattern:'ui',modes:{},privacy:{},terrainView:'top',svmTab:'scene3d',sliceGray:255,padMetric:'lum',pal:'jet',uniformityCondition:'300',uniformityMap:'luminance',reflectanceKind:'total',reflectanceConditions:{}});
+const defaults=()=>({phone:PHONES[0].id,compare:'',theta:0,psi:0,pattern:'ui',modes:{},privacy:{},terrainView:'top',svmTab:'scene3d',sliceGray:255,padMetric:'lum',pal:'jet',uniformityCondition:'300',uniformityMap:'luminance',reflectanceConditions:{}});
 const state=defaults();
 const $=id=>document.getElementById(id);
 const esc=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -29,12 +29,11 @@ function readUrl(){
   if(q.get('pattern')==='dark')state.pattern='dark';
   if(['perspective','top'].includes(q.get('terrain')))state.terrainView=q.get('terrain');
   if(q.get('svm')==='chart2d')state.svmTab='chart2d';
-  if(q.has('gray')&&Number.isFinite(+q.get('gray')))state.sliceGray=Math.min(255,Math.max(0,+q.get('gray')));
+  if(q.has('gray')&&Number.isFinite(+q.get('gray')))state.sliceGray=Math.min(255,Math.max(15,+q.get('gray')));
   if(q.get('metric')==='jncd')state.padMetric='jncd';
   if(['jet','band','turbo','mono'].includes(q.get('pal')))state.pal=q.get('pal');
   if(uniformityPhones.some(p=>p.conditions.some(c=>c.id===q.get('uniformity'))))state.uniformityCondition=q.get('uniformity');
   if(q.get('uniformity-map')==='colorTemperature')state.uniformityMap='colorTemperature';
-  if(q.get('reflectance')==='diffuse')state.reflectanceKind='diffuse';
   for(const phone of reflectancePhones){const condition=q.get(`reflectance-${phone.id}`);if(phone.conditions.some(c=>c.id===condition))state.reflectanceConditions[phone.id]=condition;}
   for(const phone of PHONES){const mode=q.get(`mode-${phone.id}`);if(optionsFor(phone).some(r=>r.file===mode))state.modes[phone.id]=mode;state.privacy[phone.id]=q.get(`privacy-${phone.id}`)==='1'&&hasPrivacy(phone);}
 }
@@ -52,7 +51,6 @@ function writeUrl(){
   if(state.pal!=='jet')q.set('pal',state.pal);
   if(state.uniformityCondition!=='300')q.set('uniformity',state.uniformityCondition);
   if(state.uniformityMap!=='luminance')q.set('uniformity-map',state.uniformityMap);
-  if(state.reflectanceKind!=='total')q.set('reflectance',state.reflectanceKind);
   for(const {phone}of selected()){
     if(state.modes[phone.id]&&state.modes[phone.id]!==optionsFor(phone)[0]?.file)q.set(`mode-${phone.id}`,state.modes[phone.id]);
     if(state.privacy[phone.id])q.set(`privacy-${phone.id}`,'1');
@@ -95,7 +93,7 @@ function syncAngle(){
   $('angleMissing').hidden=!available||!missing.length;
   $('angleMissing').textContent=missing.map(({phone})=>`${phone.name} · 可视角待测`).join('、');
   if(available){
-    mountFrame($('angleHost'),{id:'angleFrame'},'vendor/angle/embed.html?v=20261008-editorial','原版可视角仿真与观看方向热力图',sendAngleState);
+    mountFrame($('angleHost'),{id:'angleFrame'},'vendor/angle/embed.html?v=20261009-combined','原版可视角仿真与观看方向热力图',sendAngleState);
     sendAngleState();
   }
 }
@@ -132,7 +130,7 @@ function syncFlicker(){
     panel.querySelector('.svm-mode-controls').innerHTML=record?svmModeButtons(phone):'';
     plot.hidden=!record;panel.querySelector('.svm-missing').hidden=!!record;
     if(record&&available&&!panel.hidden){
-      const frame=mountFrame(plot,{'data-svm-frame':'','data-slot':String(slot)},'vendor/svm/embed.html?v=20261008-editorial',combined?'同灰阶频闪曲线对比':`${phone.name} 原版频闪图`,f=>sendSvmState(f));
+      const frame=mountFrame(plot,{'data-svm-frame':'','data-slot':String(slot)},'vendor/svm/embed.html?v=20261009-combined',combined?'同灰阶频闪曲线对比':`${phone.name} 原版频闪图`,f=>sendSvmState(f));
       const signature=svmFrameEntries(frame).map(({phone})=>currentRecord(phone).file).join('|');
       if(frame.dataset.records!==signature||wasHidden){frame.dataset.records=signature;sendSvmState(frame);}
     }
@@ -143,7 +141,7 @@ function syncMeasurement(kind,available){
   $(kind).classList.toggle('compact-empty',!hasData);
   $(`${kind}Host`).hidden=!hasData;$(`${kind}Empty`).hidden=hasData;
   if(hasData){
-    const frame=mountFrame($(`${kind}Host`),{'data-measurement':kind,class:`measurement-frame ${kind}-frame`},`vendor/${kind}/index.html?v=20261008-editorial`,`${kind==='uniformity'?'均匀度':'反射率'}实测对比`,sendMeasurementState);
+    const frame=mountFrame($(`${kind}Host`),{'data-measurement':kind,class:`measurement-frame ${kind}-frame`},`vendor/${kind}/index.html?v=20261009-combined`,`${kind==='uniformity'?'均匀度':'反射率'}实测对比`,sendMeasurementState);
     sendMeasurementState(frame);
   }
 }
@@ -165,7 +163,7 @@ function sendSvmState(target,skipFrame,changes){
 }
 function sendMeasurementState(frame){
   const kind=frame.dataset.measurement;
-  const mode=kind==='uniformity'?{condition:state.uniformityCondition,map:state.uniformityMap}:{kind:state.reflectanceKind,conditions:state.reflectanceConditions};
+  const mode=kind==='uniformity'?{condition:state.uniformityCondition,map:state.uniformityMap}:{conditions:state.reflectanceConditions};
   frame.contentWindow?.postMessage({type:`atlas-${kind}-set`,phones:selected().map(({phone})=>phone.id),names:selected().map(({phone})=>phone.name),...mode},location.origin);
 }
 function updateButtons(selector,key,value){document.querySelectorAll(selector).forEach(b=>{const on=b.dataset[key]===String(value);b.classList.toggle('active',on);b.setAttribute('aria-pressed',on);});}
@@ -216,7 +214,7 @@ window.addEventListener('message',event=>{
   const frame=[...document.querySelectorAll('[data-svm-frame]')].find(f=>f.contentWindow===event.source);
   if(frame&&data?.type==='atlas-svm-ready')sendSvmState(frame);
   if(frame&&data?.type==='atlas-svm-change'&&Number.isFinite(data.sliceGray)){
-    state.sliceGray=Math.min(255,Math.max(0,data.sliceGray));sendSvmState(null,frame,{sliceMode:'gray',sliceGray:state.sliceGray});scheduleUrl();
+    state.sliceGray=Math.min(255,Math.max(15,data.sliceGray));sendSvmState(null,frame,{sliceMode:'gray',sliceGray:state.sliceGray});scheduleUrl();
   }
   const measurement=[...document.querySelectorAll('[data-measurement]')].find(f=>f.contentWindow===event.source);
   if(measurement){
@@ -227,7 +225,6 @@ window.addEventListener('message',event=>{
         if(uniformityPhones.some(p=>p.conditions.some(c=>c.id===data.condition)))state.uniformityCondition=data.condition;
         if(['luminance','colorTemperature'].includes(data.map))state.uniformityMap=data.map;
       }else{
-        if(['total','diffuse'].includes(data.kind))state.reflectanceKind=data.kind;
         if(data.conditions&&typeof data.conditions==='object'&&!Array.isArray(data.conditions))for(const [id,condition]of Object.entries(data.conditions))if(reflectancePhones.some(p=>p.id===id&&p.conditions.some(c=>c.id===condition)))state.reflectanceConditions[id]=condition;
       }
       scheduleUrl();
@@ -246,7 +243,7 @@ window.addEventListener('scroll',()=>{if(!scrollScheduled){scrollScheduled=true;
 window.addEventListener('popstate',()=>{if(location.search!==lastSearch||urlPending){clearTimeout(urlTimer);urlPending=false;readUrl();render();sendSvmState();}});
 $('infoDialog').addEventListener('click',event=>{if(event.target===$('infoDialog'))$('infoDialog').close();});
 async function init(){try{
-  const [svm,uniformity,reflectance]=await Promise.all(['svm','uniformity','reflectance'].map(async kind=>{const response=await fetch(`data/${kind}/index.json?v=20261008-editorial`);if(!response.ok)throw new Error('数据索引读取失败');return response.json();}));
+  const [svm,uniformity,reflectance]=await Promise.all(['svm','uniformity','reflectance'].map(async kind=>{const response=await fetch(`data/${kind}/index.json?v=20261009-combined`);if(!response.ok)throw new Error('数据索引读取失败');return response.json();}));
   records=svm.records;uniformityPhones=uniformity.phones;reflectancePhones=reflectance.phones;
   for(const phone of [...uniformityPhones,...reflectancePhones])if(!PHONES.some(p=>p.id===phone.id))PHONES.push({id:phone.id,name:phone.name});
   readUrl();mountResults();render();
