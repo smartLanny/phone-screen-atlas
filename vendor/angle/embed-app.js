@@ -772,6 +772,11 @@
     onHover(h) { padHover = h; updatePadRead(); },
   });
   let padHover = null;
+  const atlasPad1 = Viz.createPad($('atlasPad1'), {
+    maxTheta: MAX_TILT,
+    onInput(theta, psi) { stopSweep(); setView(theta, psi); },
+    onHover(h) { padHover = h; updatePadRead(); },
+  });
   // levels：等值线级数（亮度每 10% 一条，色偏每 2 JNCD 一条）
   const metricFmt = {
     lum: { t: (v) => v, levels: 10, ticks: ['0%', '50%', '100%'], fmt: (v) => `亮度 ${Math.round(v * 100)}%` },
@@ -790,18 +795,26 @@
   $('palette').addEventListener('change', (e) => { S.pal = e.target.value; requestRender(); });
 
   function updatePadRead() {
-    const id = activeIds()[0], g = getGrid(id), mf = metricFmt[S.padMetric];
+    activeIds().forEach((id, i) => {
+    const g = getGrid(id), mf = metricFmt[S.padMetric];
     const h = padHover || { theta: S.theta, psi: S.psi };
     const where = h.theta < 0.5 ? '正对' : `${Math.round(h.theta)}° ${Viz.dirName(h.psi)}`;
-    const who = S.compare ? `<span class="key" style="--k:${SERIES[0]}"></span>` : '';
+    const who = S.compare ? `<span class="key" style="--k:${SERIES[i]}"></span>` : '';
     const v = g[S.padMetric](h.theta, h.psi + S.rot);
-    padRead.innerHTML = `${who}<span class="dim">${padHover ? '指针处' : '当前'}</span> ${where} · <b>${mf.fmt(v)}</b>`;
+    (i === 0 ? padRead : $('atlasPadRead1')).innerHTML = `${who}<span class="dim">${padHover ? '指针处' : '当前'}</span> ${where} · <b>${mf.fmt(v)}</b>`;
+    });
   }
 
   function updatePad(M) {
-    const id = activeIds()[0], m = getModel(id), g = getGrid(id), mf = metricFmt[S.padMetric];
+    activeIds().forEach((id, i) => {
+    const directionPad = i === 0 ? pad : atlasPad1;
+    const profile = byId(id);
+    const mode = profile.privacy ? (profile.device.startsWith('iPhone') ? '防窥膜' : '防窥模式') : '默认';
+    $('atlasPadLabel' + i).textContent = profile.device.replace(' GH3', '') + ' · ' + mode;
+    $(i === 0 ? 'pad' : 'atlasPad1').setAttribute('aria-label', profile.device + '观看方向：拖动设置眼睛相对屏幕的位置');
+    const m = getModel(id), g = getGrid(id), mf = metricFmt[S.padMetric];
     applyPalette();
-    pad.setField(`${id}|${S.padMetric}|${S.pal}`, (th, psi) => mf.t(g[S.padMetric](th, psi)), { pal: S.pal, levels: mf.levels });
+    directionPad.setField(`${id}|${S.padMetric}|${S.pal}`, (th, psi) => mf.t(g[S.padMetric](th, psi)), { pal: S.pal, levels: mf.levels });
     $('padRamp').style.background = Viz.paletteCSS(S.pal, mf.levels, false);
     const spokes = m.lines.filter((l) => !l.virtual).map((l) => l.psi);
     const hatch = [];
@@ -816,8 +829,9 @@
         return [a.theta, a.psi - S.rot];
       });
     }
-    pad.update({ theta: S.theta, psi: S.psi, rot: S.rot, spokes, hatch, eyes });
+    directionPad.update({ theta: S.theta, psi: S.psi, rot: S.rot, spokes, hatch, eyes });
     $('padTicks').innerHTML = mf.ticks.map((t) => `<span>${t}</span>`).join('');
+    });
     updatePadRead();
   }
 
@@ -993,6 +1007,8 @@
       document.body.dataset.layout = 'embed';
       const controls = $('atlasControls');
       if ($('secPad').parentElement !== controls) controls.appendChild($('secPad'));
+      document.body.dataset.compare = String(S.compare);
+      if (padRead.parentElement !== $('atlasPadCard0')) $('atlasPadCard0').appendChild(padRead);
       return;
     }
     const W = window.innerWidth, H = window.innerHeight;
@@ -1026,7 +1042,7 @@
     S.tab = b.dataset.tab;
     applyTab();
     $('panelBody').scrollTop = 0;
-    requestAnimationFrame(() => { pad.draw(); charts.render(); requestRender(); });
+    requestAnimationFrame(() => { pad.draw(); atlasPad1.draw(); charts.render(); requestRender(); });
   });
   function setClean(on) {
     S.clean = on;
@@ -1340,8 +1356,8 @@
   syncProfileUI();
   Patterns.ready.then(() => { if (S.pattern) loadPattern(S.pattern, true); });
   if ('ResizeObserver' in window) {
-    const ro = new ResizeObserver(() => { pad.draw(); charts.render(); });
-    ro.observe($('pad')); ro.observe($('charts'));
+    const ro = new ResizeObserver(() => { pad.draw(); atlasPad1.draw(); charts.render(); });
+    ro.observe($('pad')); ro.observe($('atlasPad1')); ro.observe($('charts'));
   }
   resize();
   hashReady = true;

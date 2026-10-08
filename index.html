@@ -7,7 +7,7 @@
 <meta name="theme-color" content="#0d1016">
 <meta name="description" content="手机屏幕频闪与可视角实测。统一选择机型，查看原版热力图、同灰阶二维曲线与可视角仿真。">
 <title>屏幕实测 · Screen Atlas</title>
-<link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css?v=20261008-stack">
+<link rel="icon" href="icon.svg" type="image/svg+xml"><link rel="stylesheet" href="styles.css?v=20261008-dual">
 </head>
 <body>
 <a class="skip-link" href="#viewing-angle">跳到可视角</a>
@@ -16,5 +16,5 @@
 <footer><span>Screen Atlas</span><button data-action="info">查看说明</button></footer>
 <dialog id="infoDialog" aria-labelledby="infoTitle"><div class="dialog-head"><h2 id="infoTitle">查看说明</h2><button class="icon-button" data-action="close-info" aria-label="关闭说明">×</button></div><div class="dialog-body"><p>频闪沿用原版彩色热力图，亮度范围固定为 ≤ 500 nits。色标表示 SVM 的高低，空缺位置表示无有效测量。</p><p>可视角沿用原版仿真与方向热力图，可拖动手机或方向图，并切换亮度／色偏。每种状态已有0°、30°、60°、90°、120°、150°六方位实测。防窥效果按各机型实际测量切换。iPhone 18 Pro Max 的两类数据来自同一台 GH3 手机。</p></div></dialog>
 <div class="toast" id="toast" role="status"></div>
-<script src="vendor/angle/data.js?v=20261008-six-directions"></script><script type="module" src="app.js?v=20261008-stack"></script>
+<script src="vendor/angle/data.js?v=20261008-six-directions"></script><script type="module" src="app.js?v=20261008-dual"></script>
 </body></html>

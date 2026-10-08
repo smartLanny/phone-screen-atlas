@@ -15,11 +15,36 @@ s = s.replace('function applyLayout() {', '''function applyLayout() {
       document.body.dataset.layout = 'embed';
       const controls = $('atlasControls');
       if ($('secPad').parentElement !== controls) controls.appendChild($('secPad'));
+      document.body.dataset.compare = String(S.compare);
+      if (padRead.parentElement !== $('atlasPadCard0')) $('atlasPadCard0').appendChild(padRead);
       return;
     }''')
 s = s.replace("const capH = (capEl.offsetHeight || (S.stereo ? 86 : sheet ? 64 : 76)) + 14;", "const capH = window.ATLAS_EMBED ? 0 : (capEl.offsetHeight || (S.stereo ? 86 : sheet ? 64 : 76)) + 14;")
 s = s.replace('    syncThetaChips();\n    requestRender();', "    syncThetaChips();\n    requestRender();\n    atlasNotify();")
 s = s.replace("if (appMode === 'scene') return;", "if (appMode === 'scene' || (window.ATLAS_EMBED && /^[pPhH]$/.test(e.key))) return;")
+s = s.replace('  let padHover = null;', """  let padHover = null;
+  const atlasPad1 = Viz.createPad($('atlasPad1'), {
+    maxTheta: MAX_TILT,
+    onInput(theta, psi) { stopSweep(); setView(theta, psi); },
+    onHover(h) { padHover = h; updatePadRead(); },
+  });""")
+start = s.index('  function updatePadRead() {')
+end = s.index('\n  function updatePad(M)', start)
+read = s[start:end]
+read = read.replace('    const id = activeIds()[0],', '    activeIds().forEach((id, i) => {\n    const')
+read = read.replace('SERIES[0]', 'SERIES[i]')
+read = read.replace('padRead.innerHTML =', "(i === 0 ? padRead : $('atlasPadRead1')).innerHTML =")
+read = read.rsplit('\n  }', 1)[0] + '\n    });\n  }\n'
+s = s[:start] + read + s[end:]
+start = s.index('  function updatePad(M) {')
+end = s.index('\n  // ---------- 曲线', start)
+update = s[start:end]
+update = update.replace('    const id = activeIds()[0],', '    activeIds().forEach((id, i) => {\n    const directionPad = i === 0 ? pad : atlasPad1;\n    const profile = byId(id);\n    const mode = profile.privacy ? (profile.device.startsWith(\'iPhone\') ? \'防窥膜\' : \'防窥模式\') : \'默认\';\n    $(\'atlasPadLabel\' + i).textContent = profile.device.replace(\' GH3\', \'\') + \' · \' + mode;\n    $(i === 0 ? \'pad\' : \'atlasPad1\').setAttribute(\'aria-label\', profile.device + \'观看方向：拖动设置眼睛相对屏幕的位置\');\n    const')
+update = update.replace('pad.setField(', 'directionPad.setField(').replace('pad.update(', 'directionPad.update(')
+update = update.replace('    updatePadRead();', '    });\n    updatePadRead();')
+s = s[:start] + update + s[end:]
+s = s.replace('pad.draw(); charts.render();', 'pad.draw(); atlasPad1.draw(); charts.render();')
+s = s.replace("ro.observe($('pad'));", "ro.observe($('pad')); ro.observe($('atlasPad1'));")
 bridge = '''
   // Embed the original direction pad and its existing input handlers.
   function atlasNotify() {
@@ -58,25 +83,42 @@ bridge = '''
 s = s.rsplit('})();', 1)[0] + bridge + '})();\n'
 (root / 'embed-app.js').write_text(s)
 html = (root / 'index.html').read_text()
+html = html.replace('<div class="pad-wrap">', '<div class="pad-wrap" id="atlasPadCard0"><h3 class="atlas-pad-label" id="atlasPadLabel0"></h3>', 1)
+html = html.replace('<div class="pad-side">', '<div class="pad-wrap atlas-second" id="atlasPadCard1"><h3 class="atlas-pad-label" id="atlasPadLabel1"></h3><canvas id="atlasPad1"></canvas><div class="pad-read" id="atlasPadRead1"></div></div><div class="pad-side">', 1)
 css = '''<style>
-html,body {background:radial-gradient(ellipse at 35% 45%,#1d222c 0%,#101319 70%) !important;}
-body > *:not(#gl):not(#atlasControls):not(#atlasWatermark):not(script):not(style) {display:none !important;}
+html {background:#101319 !important;}
+body {background:url(../../assets/watermark.svg) repeat,radial-gradient(ellipse at 35% 45%,#1d222c 0%,#101319 70%) !important;}
+body > *:not(#gl):not(#atlasControls):not(script):not(style) {display:none !important;}
 #gl {outline:none;}
 #atlasControls {position:absolute;right:0;top:0;bottom:0;width:320px;z-index:2;background:#11151c;border-left:1px solid #272d39;overflow:auto;}
 #atlasControls #secPad {display:block !important;padding:20px 18px;border:0;}
-#atlasControls #pad {max-width:280px;}
+#atlasControls .pad-wrap {flex-direction:column;align-items:center;}
+#atlasControls #pad,#atlasPad1 {display:block;width:100%;max-width:280px;aspect-ratio:1;touch-action:none;cursor:crosshair;}
+.atlas-pad-label {margin:0 0 8px;font-size:12px;font-weight:500;color:#a8b3c5;}
+#atlasPadCard1 {display:none;}
+body[data-compare="true"] #atlasControls {width:560px;}
+body[data-compare="true"] .pad-grid {display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
+body[data-compare="true"] #atlasPadCard1 {display:flex;}
+body[data-compare="true"] .pad-side {grid-column:1/-1;}
+body[data-compare="true"] #atlasControls #pad,body[data-compare="true"] #atlasPad1 {max-width:260px;}
+body[data-compare="true"] #atlasPadLabel1 {color:#d9a57e;}
+body[data-compare="true"] #atlasPadLabel0 {color:#9aaeff;}
 #atlasControls .pad-read {font-size:11px;}
 #atlasControls .mini-select {font-size:10px;}
 #atlasControls .angle-row .chips button {font-size:10px;padding:5px 7px;}
-#atlasWatermark {position:absolute;left:20px;bottom:16px;z-index:1;color:#9aa6ba;opacity:.25;font-size:18px;letter-spacing:2px;pointer-events:none;user-select:none;}
+@media(min-width:701px) and (max-width:1100px){
+ body[data-compare="true"] #atlasControls {left:0;right:0;top:360px;width:auto;border-left:0;border-top:1px solid #272d39;}
+}
 @media(max-width:700px){
  #atlasControls {left:0;right:0;top:360px;bottom:0;width:auto;border-left:0;border-top:1px solid #272d39;}
  #atlasControls #secPad {padding:16px 18px;max-width:380px;margin:auto;}
  #atlasControls #pad {max-width:270px;}
- #atlasWatermark {top:329px;bottom:auto;left:17px;font-size:15px;}
+ body[data-compare="true"] #atlasControls {width:auto;}
+ body[data-compare="true"] .pad-grid {grid-template-columns:1fr;}
+ body[data-compare="true"] #atlasPadCard1 {margin-top:16px;}
 }
 </style><script>window.ATLAS_EMBED=true;</script></head>'''
 html = html.replace('</head>', css)
-html = html.replace('<script src="app.js?v=15"></script>', '<aside id="atlasControls" aria-label="原版观看方向"></aside><div id="atlasWatermark" aria-hidden="true">野生的装机宅</div><script src="embed-app.js?v=20261008-pad"></script>')
+html = html.replace('<script src="app.js?v=15"></script>', '<aside id="atlasControls" aria-label="原版观看方向"></aside><script src="embed-app.js?v=20261008-dual-pad"></script>')
 assert 'id="atlasControls"' in html
 (root / 'embed.html').write_text(html)

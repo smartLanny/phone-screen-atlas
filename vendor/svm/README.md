@@ -50,7 +50,7 @@ window.addEventListener('message', event => {
 
 灰阶控制复用原 `Inspector2D` 第一个 Section 的原 `Slider` DOM：原标签、G0–255 滑块、255/192/127/64/32 预设以及 React `onChange` 完整保留。桥接仅点击原 Inspector 展开按钮完成挂载，并标记该原子树；CSS 将它显示为底部 96px 控制条。未重建、复制或重挂载该 React 控件。其他 Inspector 参数、原二维播放/表格工具条保持隐藏。图表 stage 缩短 96px 为原控件让位，由原 ResizeObserver 自行重排画布。
 
-用户操作原控件会发送 `{type:'atlas-svm-change', view, sliceMode, sliceGray, sliceNits}`；父页主动 `atlas-svm-set` 不产生 change 回声。父页可以保存最后灰阶，并在再次切入二维时传回。单个“野生的装机宅”水印通过 `body::after` 放在顶部右侧留白，低对比、无点击区域，不重复铺满。
+用户操作原控件会发送 `{type:'atlas-svm-change', view, sliceMode, sliceGray, sliceNits}`；父页主动 `atlas-svm-set` 不产生 change 回声。父页可以保存最后灰阶，并在再次切入二维时传回。“野生的装机宅”共享底纹位于画布上方预留的 28px 背景带内，稀疏重复、无点击区域，不覆盖原图色块、曲线或标签。主站二维默认 G255，分享链接仍可指定其他灰阶。
 
 嵌入在 capture 阶段屏蔽原 Shell 的 1/2/3/T 视图切换、F/H 展示切换以及空格/R 播放快捷键，避免绕过父页状态或启动隐藏播放。输入框、滑块、按钮保留浏览器默认键盘行为；原 Shell 的空格 keyup 也被隔离，保证按钮仍能正常空格激活。滑块方向键、Home/End/PageUp/PageDown、按钮 Enter、Ctrl/Cmd/Alt 组合键与输入法事件保持原样。
 

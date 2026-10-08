@@ -5055,17 +5055,17 @@ html { color-scheme: dark; }
 body { overflow: hidden; background: #07090d; }
 [data-testid="main"] { min-width: 0; }
 
-/* One unobtrusive mark in the original canvas's top margin. */
+/* A reserved outer band keeps the shared background pattern clear of the original canvas. */
+[data-testid="stage-outer"] { top: 28px !important; }
 body::after {
-  content: "野生的装机宅";
+  content: "";
   position: fixed;
-  top: 8px;
-  right: 16px;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 28px;
   z-index: 40;
-  color: rgba(183, 195, 211, .26);
-  font: 500 15px/22px system-ui, sans-serif;
-  letter-spacing: .15em;
-  white-space: nowrap;
+  background: #07090d url('../../assets/watermark.svg') repeat 0 -96px / 400px 240px;
   pointer-events: none;
   user-select: none;
 }
