@@ -7,15 +7,17 @@ const PHONES=[
   {id:'huawei-mate-80-rs',name:'华为 Mate 80 RS'},
   {id:'huawei-mate-70-air',name:'华为 Mate 70 Air'},
 ];
-const defaults=()=>({phone:PHONES[0].id,compare:'',theta:45,psi:0,pattern:'ui',modes:{},privacy:{},terrainView:'top',svmTab:'scene3d',sliceGray:255,padMetric:'lum',pal:'jet'});
+const defaults=()=>({phone:PHONES[0].id,compare:'',theta:45,psi:0,pattern:'ui',modes:{},privacy:{},terrainView:'top',svmTab:'scene3d',sliceGray:255,padMetric:'lum',pal:'jet',uniformityCondition:'300',uniformityMap:'luminance',reflectanceKind:'total',reflectanceConditions:{}});
 const state=defaults();
 const $=id=>document.getElementById(id);
 const esc=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const narrow=matchMedia('(max-width:700px)');
-let records=[],urlTimer,toastTimer;
+let records=[],uniformityPhones=[],reflectancePhones=[],urlTimer,toastTimer,lastSearch=location.search;
 const selected=()=>[state.phone,state.compare].filter(Boolean).map((id,slot)=>({phone:PHONES.find(p=>p.id===id),slot}));
 const optionsFor=phone=>records.filter(r=>r.device===phone.name);
 const svmEntries=()=>selected().filter(({phone})=>optionsFor(phone).length);
+const hasUniformity=phone=>uniformityPhones.some(p=>p.id===phone.id);
+const hasReflectance=phone=>reflectancePhones.some(p=>p.id===phone.id);
 const hasPrivacy=phone=>ANG_DATA.profiles.some(p=>p.device===phone.angleDevice&&p.privacy);
 const currentRecord=phone=>optionsFor(phone).find(r=>r.file===state.modes[phone.id])||optionsFor(phone)[0];
 const angleEntries=()=>selected().filter(({phone})=>phone.angleDevice).map(entry=>({...entry,profile:ANG_DATA.profiles.find(p=>p.device===entry.phone.angleDevice&&p.privacy===!!state.privacy[entry.phone.id])}));
@@ -33,6 +35,10 @@ function readUrl(){
   if(q.has('gray')&&Number.isFinite(+q.get('gray')))state.sliceGray=Math.min(255,Math.max(0,+q.get('gray')));
   if(q.get('metric')==='jncd')state.padMetric='jncd';
   if(['jet','band','turbo','mono'].includes(q.get('pal')))state.pal=q.get('pal');
+  if(uniformityPhones.some(p=>p.conditions.some(c=>c.id===q.get('uniformity'))))state.uniformityCondition=q.get('uniformity');
+  if(q.get('uniformity-map')==='colorTemperature')state.uniformityMap='colorTemperature';
+  if(q.get('reflectance')==='diffuse')state.reflectanceKind='diffuse';
+  for(const phone of reflectancePhones){const condition=q.get(`reflectance-${phone.id}`);if(phone.conditions.some(c=>c.id===condition))state.reflectanceConditions[phone.id]=condition;}
   for(const phone of PHONES){const mode=q.get(`mode-${phone.id}`);if(optionsFor(phone).some(r=>r.file===mode))state.modes[phone.id]=mode;state.privacy[phone.id]=q.get(`privacy-${phone.id}`)==='1'&&hasPrivacy(phone);}
 }
 function writeUrl(){
@@ -46,21 +52,26 @@ function writeUrl(){
   if(state.sliceGray!==255)q.set('gray',state.sliceGray);
   if(state.padMetric!=='lum')q.set('metric',state.padMetric);
   if(state.pal!=='jet')q.set('pal',state.pal);
+  if(state.uniformityCondition!=='300')q.set('uniformity',state.uniformityCondition);
+  if(state.uniformityMap!=='luminance')q.set('uniformity-map',state.uniformityMap);
+  if(state.reflectanceKind!=='total')q.set('reflectance',state.reflectanceKind);
   for(const {phone}of selected()){
     if(state.modes[phone.id]&&state.modes[phone.id]!==optionsFor(phone)[0].file)q.set(`mode-${phone.id}`,state.modes[phone.id]);
     if(state.privacy[phone.id])q.set(`privacy-${phone.id}`,'1');
+    const condition=state.reflectanceConditions[phone.id],source=reflectancePhones.find(p=>p.id===phone.id);
+    if(condition&&condition!==source?.conditions[0]?.id)q.set(`reflectance-${phone.id}`,condition);
   }
-  history.replaceState(null,'',`${location.pathname}?${q}${location.hash}`);
+  history.replaceState(null,'',`${location.pathname}?${q}${location.hash}`);lastSearch=location.search;
 }
 function renderSelection(){
   $('selection').classList.toggle('comparing',!!state.compare);
-  $('selection').innerHTML=selected().map(({phone,slot},i)=>`${i?'<span class="vs">VS</span>':''}<div class="phone-select ${slot?'secondary':''}"><label class="select-label" for="phone-${slot}">${slot?'对比手机':'查看手机'}${phone.panel?`<span class="panel-label">${phone.panel}</span>`:''}</label><select id="phone-${slot}" data-phone="${slot}" aria-label="${slot?'对比手机':'查看手机'}">${PHONES.map(p=>`<option value="${p.id}" ${p.id===phone.id?'selected':''} ${p.id===(slot?state.phone:state.compare)?'disabled':''}>${esc(p.name)}</option>`).join('')}</select><div class="availability"><span class="${optionsFor(phone).length?'':'missing'}">${optionsFor(phone).length?'频闪':'频闪待补充'}</span><span class="${phone.angleDevice?'':'missing'}">${phone.angleDevice?'可视角':'可视角待测'}</span></div></div>`).join('')+(state.compare?'<button class="remove-compare" data-action="remove-compare" aria-label="移除对比手机">移除 ×</button>':'<button class="compare-button" data-action="add-compare">＋ 添加对比</button>');
+  $('selection').innerHTML=selected().map(({phone,slot},i)=>`${i?'<span class="vs">VS</span>':''}<div class="phone-select ${slot?'secondary':''}"><label class="select-label" for="phone-${slot}">${slot?'对比机型':'查看机型'}${phone.panel?`<span class="panel-label">${phone.panel}</span>`:''}</label><select id="phone-${slot}" data-phone="${slot}" aria-label="${slot?'对比机型':'查看机型'}">${PHONES.map(p=>`<option value="${p.id}" ${p.id===phone.id?'selected':''} ${p.id===(slot?state.phone:state.compare)?'disabled':''}>${esc(p.name)}</option>`).join('')}</select><div class="availability"><span class="${optionsFor(phone).length?'':'missing'}">${optionsFor(phone).length?'频闪':'频闪待补充'}</span><span class="${phone.angleDevice?'':'missing'}">${phone.angleDevice?'可视角':'可视角待测'}</span><span class="${hasUniformity(phone)?'':'missing'}">${hasUniformity(phone)?'均匀度':'均匀度待测'}</span><span class="${hasReflectance(phone)?'':'missing'}">${hasReflectance(phone)?'反射率':'反射率待测'}</span></div></div>`).join('')+(state.compare?'<button class="remove-compare" data-action="remove-compare" aria-label="移除对比机型">移除 ×</button>':'<button class="compare-button" data-action="add-compare">＋ 添加对比</button>');
 }
 function svmModeButtons({phone,slot}){const options=optionsFor(phone);return options.length?`<div class="svm-mode-controls ${slot?'secondary':''}"><div class="segmented" aria-label="${esc(phone.name)}频闪模式">${options.map(r=>`<button data-mode-phone="${phone.id}" data-mode-file="${r.file}" class="${r.file===currentRecord(phone).file?'active':''}" aria-pressed="${r.file===currentRecord(phone).file}">${esc(r.mode)}</button>`).join('')}</div></div>`:'';}
 function privacyButtons(){const groups=angleEntries().filter(({phone})=>hasPrivacy(phone));return groups.map(({phone,slot})=>`<div class="angle-privacy ${slot?'secondary':''}">${groups.length>1?`<span class="privacy-phone">${esc(phone.name)}</span>`:''}<div class="segmented" aria-label="${esc(phone.name)}防窥状态">${[false,true].map(on=>`<button data-privacy-phone="${phone.id}" data-privacy="${+on}" class="${!!state.privacy[phone.id]===on?'active':''}" aria-pressed="${!!state.privacy[phone.id]===on}">${privacyName(phone,on)}</button>`).join('')}</div></div>`).join('');}
 function svmPanel({phone,slot}){
   const recordsForPhone=optionsFor(phone);
-  return `<section class="svm-single ${slot?'secondary':''}"><div class="svm-panel-head"><h3>${esc(phone.name)}</h3>${svmModeButtons({phone,slot})}</div>${recordsForPhone.length?`<iframe data-svm-frame data-slot="${slot}" src="vendor/svm/embed.html?v=20261008-mate90" title="${esc(phone.name)} 原版 SVM 热力图"></iframe>`:'<div class="svm-missing">频闪数据待补充</div>'}</section>`;
+  return `<section class="svm-single ${slot?'secondary':''}"><div class="svm-panel-head"><h3>${esc(phone.name)}</h3>${svmModeButtons({phone,slot})}</div>${recordsForPhone.length?`<iframe loading="lazy" data-svm-frame data-slot="${slot}" src="vendor/svm/embed.html?v=20261008-mate90" title="${esc(phone.name)} 原版 SVM 热力图"></iframe>`:'<div class="svm-missing">频闪数据待补充</div>'}</section>`;
 }
 function svmFrame(){
   if(state.compare)return `<div class="svm-frames split">${selected().map(svmPanel).join('')}</div>`;
@@ -68,16 +79,26 @@ function svmFrame(){
 }
 function renderAngle(){
   const entries=angleEntries(),missing=selected().filter(e=>!e.phone.angleDevice);
-  return `<section class="section-block" id="viewing-angle" aria-labelledby="angleTitle"><div class="section-heading angle-heading"><h2 id="angleTitle">可视角</h2><div class="heading-actions angle-toolbar">${entries.length?`<div class="segmented" aria-label="屏幕内容"><button data-pattern="ui" class="${state.pattern==='ui'?'active':''}" aria-pressed="${state.pattern==='ui'}">浅色画面</button><button data-pattern="dark" class="${state.pattern==='dark'?'active':''}" aria-pressed="${state.pattern==='dark'}">深色画面</button></div>${privacyButtons()}<button class="text-button" data-action="angle-reset" title="回到正视">回正 ↺</button>`:''}</div></div>${entries.length?`${missing.length?`<div class="missing-note">${missing.map(e=>esc(e.phone.name)).join('、')} · 可视角待测</div>`:''}<div class="angle-stage ${entries.length===2?'comparing':''}"><iframe id="angleFrame" src="vendor/angle/embed.html?v=20261008-mate90-appearance" title="原版可视角仿真与观看方向热力图"></iframe></div>`:'<div class="empty"><h3>暂无可视角数据</h3><button data-action="choose-angle-phone">查看已测机型</button></div>'}</section>`;
+  return `<section class="section-block ${entries.length?'':'compact-empty'}" id="viewing-angle" aria-labelledby="angleTitle"><div class="section-heading angle-heading"><h2 id="angleTitle">可视角</h2><div class="heading-actions angle-toolbar">${entries.length?`<div class="segmented" aria-label="屏幕内容"><button data-pattern="ui" class="${state.pattern==='ui'?'active':''}" aria-pressed="${state.pattern==='ui'}">浅色画面</button><button data-pattern="dark" class="${state.pattern==='dark'?'active':''}" aria-pressed="${state.pattern==='dark'}">深色画面</button></div>${privacyButtons()}<button class="text-button" data-action="angle-reset" title="回到正视">回正 ↺</button>`:''}</div></div>${entries.length?`${missing.length?`<div class="missing-note">${missing.map(e=>esc(e.phone.name)).join('、')} · 可视角待测</div>`:''}<div class="angle-stage ${entries.length===2?'comparing':''}"><iframe id="angleFrame" src="vendor/angle/embed.html?v=20261008-mate90-appearance" title="原版可视角仿真与观看方向热力图"></iframe></div>`:'<div class="empty"><h3>暂无可视角数据</h3><button data-action="choose-angle-phone">查看已测机型</button></div>'}</section>`;
 }
 function renderFlicker(){
-  const entries=svmEntries(),panels=state.compare?selected():entries;
-  return `<section class="section-block" id="flicker" aria-labelledby="flickerTitle"><div class="section-heading"><h2 id="flickerTitle">频闪</h2><div class="heading-actions">${entries.length?`<div class="segmented" aria-label="频闪视图">${[['top','热力图'],['perspective','立体'],['chart2d','二维曲线']].map(([view,label])=>`<button data-svm-view="${view}" class="${(view==='chart2d'?state.svmTab==='chart2d':state.svmTab==='scene3d'&&state.terrainView===view)?'active':''}" aria-pressed="${view==='chart2d'?state.svmTab==='chart2d':state.svmTab==='scene3d'&&state.terrainView===view}">${label}</button>`).join('')}</div><span class="quiet-label" title="固定显示≤500 nits部分">≤ 500 nits</span>`:''}</div></div>${panels.length?`<div id="svmHost" class="svm-stage ${splitSvm()?'split-stage':''}">${svmFrame()}</div>`:'<div class="empty"><h3>暂无频闪数据</h3></div>'}</section>`;
+  const entries=svmEntries(),panels=entries.length?(state.compare?selected():entries):[];
+  return `<section class="section-block ${panels.length?'':'compact-empty'}" id="flicker" aria-labelledby="flickerTitle"><div class="section-heading"><h2 id="flickerTitle">频闪</h2><div class="heading-actions">${entries.length?`<div class="segmented" aria-label="频闪视图">${[['top','热力图'],['perspective','立体'],['chart2d','二维曲线']].map(([view,label])=>`<button data-svm-view="${view}" class="${(view==='chart2d'?state.svmTab==='chart2d':state.svmTab==='scene3d'&&state.terrainView===view)?'active':''}" aria-pressed="${view==='chart2d'?state.svmTab==='chart2d':state.svmTab==='scene3d'&&state.terrainView===view}">${label}</button>`).join('')}</div><span class="quiet-label" title="固定显示≤500 nits部分">≤ 500 nits</span>`:''}</div></div>${panels.length?`<div id="svmHost" class="svm-stage ${splitSvm()?'split-stage':''}">${svmFrame()}</div>`:'<div class="empty"><h3>暂无频闪数据</h3></div>'}</section>`;
 }
 function wireSvmFrames(){document.querySelectorAll('[data-svm-frame]').forEach(frame=>frame.addEventListener('load',()=>sendSvmState(frame)));}
+function renderMeasurement(kind,title,available){
+  const hasData=selected().some(({phone})=>available.some(p=>p.id===phone.id));
+  return `<section class="section-block ${hasData?'':'compact-empty'}" id="${kind}" aria-labelledby="${kind}Title"><div class="section-heading"><h2 id="${kind}Title">${title}</h2></div>${hasData?`<iframe loading="lazy" class="measurement-frame ${kind}-frame" data-measurement="${kind}" src="vendor/${kind}/index.html?v=20261008-database" title="${title}实测对比"></iframe>`:`<div class="empty"><h3>暂无${title}数据</h3></div>`}</section>`;
+}
+function sendMeasurementState(frame){
+  const module=frame.dataset.measurement;
+  const mode=module==='uniformity'?{condition:state.uniformityCondition,map:state.uniformityMap}:{kind:state.reflectanceKind,conditions:state.reflectanceConditions};
+  frame.contentWindow?.postMessage({type:`atlas-${module}-set`,phones:selected().map(({phone})=>phone.id),names:selected().map(({phone})=>phone.name),...mode},location.origin);
+}
 function render(){
-  renderSelection();$('results').innerHTML=renderAngle()+renderFlicker();
+  renderSelection();$('results').innerHTML=renderAngle()+renderFlicker()+renderMeasurement('uniformity','均匀度',uniformityPhones)+renderMeasurement('reflectance','反射率',reflectancePhones);
   $('angleFrame')?.addEventListener('load',sendAngleState);wireSvmFrames();writeUrl();
+  document.querySelectorAll('[data-measurement]').forEach(frame=>frame.addEventListener('load',()=>sendMeasurementState(frame)));
 }
 function sendAngleState(){$('angleFrame')?.contentWindow?.postMessage({type:'atlas-angle-set',profiles:angleEntries().map(e=>e.profile.id),theta:state.theta,psi:state.psi,pattern:state.pattern,padMetric:state.padMetric,pal:state.pal},location.origin);}
 function sendSvmState(target,skipFrame){
@@ -122,9 +143,39 @@ window.addEventListener('message',event=>{
   const frame=[...document.querySelectorAll('[data-svm-frame]')].find(f=>f.contentWindow===event.source);
   if(frame&&event.data?.type==='atlas-svm-ready')sendSvmState(frame);
   if(frame&&event.data?.type==='atlas-svm-change'&&Number.isFinite(event.data.sliceGray)){state.sliceGray=Math.min(255,Math.max(0,event.data.sliceGray));sendSvmState(null,frame);clearTimeout(urlTimer);urlTimer=setTimeout(writeUrl,250);}
+  const measurement=[...document.querySelectorAll('[data-measurement]')].find(f=>f.contentWindow===event.source);
+  if(measurement){
+    const type=`atlas-${measurement.dataset.measurement}`;
+    if(event.data?.type===`${type}-ready`)sendMeasurementState(measurement);
+    if(event.data?.type===`${type}-change`){
+      if(measurement.dataset.measurement==='uniformity'){
+        if(uniformityPhones.some(p=>p.conditions.some(c=>c.id===event.data.condition)))state.uniformityCondition=event.data.condition;
+        if(['luminance','colorTemperature'].includes(event.data.map))state.uniformityMap=event.data.map;
+      }else{
+        if(['total','diffuse'].includes(event.data.kind))state.reflectanceKind=event.data.kind;
+        if(event.data.conditions&&typeof event.data.conditions==='object'&&!Array.isArray(event.data.conditions)){
+          for(const [id,condition] of Object.entries(event.data.conditions))if(reflectancePhones.some(p=>p.id===id&&p.conditions.some(c=>c.id===condition)))state.reflectanceConditions[id]=condition;
+        }
+      }
+      clearTimeout(urlTimer);urlTimer=setTimeout(writeUrl,250);
+    }
+    const height=event.data?.height;
+    if(event.data?.type===`${type}-height`&&Number.isFinite(height)&&height>=200&&height<=3000){
+      const size=`${Math.ceil(height)}px`;
+      if(measurement.style.height!==size)measurement.style.height=size;
+    }
+  }
 });
-window.addEventListener('popstate',()=>{readUrl();render();});
+window.addEventListener('popstate',()=>{if(location.search!==lastSearch){readUrl();render();}});
 narrow.addEventListener('change',()=>{if(records.length)render();});
 $('infoDialog').addEventListener('click',event=>{if(event.target===$('infoDialog'))$('infoDialog').close();});
-async function init(){try{const response=await fetch('data/svm/index.json');if(!response.ok)throw new Error('数据索引读取失败');records=(await response.json()).records;readUrl();render();}catch(error){console.error(error);$('results').innerHTML='<div class="error">数据载入失败，请刷新页面。</div>';}}
+async function init(){try{
+  const [svm,uniformity,reflectance]=await Promise.all(['svm','uniformity','reflectance'].map(async kind=>{
+    const response=await fetch(`data/${kind}/index.json`);if(!response.ok)throw new Error('数据索引读取失败');return response.json();
+  }));
+  records=svm.records;uniformityPhones=uniformity.phones;reflectancePhones=reflectance.phones;
+  for(const phone of [...uniformityPhones,...reflectancePhones])if(!PHONES.some(p=>p.id===phone.id))PHONES.push({id:phone.id,name:phone.name});
+  readUrl();render();
+  if(location.hash)$(location.hash.slice(1))?.scrollIntoView();
+}catch(error){console.error(error);$('results').innerHTML='<div class="error">数据载入失败，请刷新页面。</div>';}}
 init();

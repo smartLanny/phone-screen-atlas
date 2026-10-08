@@ -2,14 +2,14 @@ import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {readFileSync,existsSync} from 'node:fs';
 const root=fileURLToPath(new URL('../',import.meta.url));
-for(const args of [['--check','app.js'],['--check','vendor/angle/embed-app.js'],['scripts/check-angle-data.mjs'],['scripts/svm/rebuild.mjs','--check'],['scripts/svm/audit.mjs'],['scripts/build-svm-embed.mjs','--check'],['vendor/svm/verify-bridge.mjs']]){
+for(const args of [['--check','app.js'],['--check','vendor/angle/embed-app.js'],['--check','vendor/uniformity/app.js'],['--check','vendor/reflectance/app.js'],['scripts/check-measurements.mjs'],['scripts/check-angle-data.mjs'],['scripts/svm/rebuild.mjs','--check'],['scripts/svm/audit.mjs'],['scripts/build-svm-embed.mjs','--check'],['vendor/svm/verify-bridge.mjs']]){
   const result=spawnSync(process.execPath,args,{cwd:root,stdio:'inherit'});
   if(result.status!==0)process.exit(result.status||1);
 }
 const index=JSON.parse(readFileSync(root+'data/svm/index.json'));
 if(index.records.length!==16)throw new Error('Expected 16 SVM records');
 for(const entry of index.records)for(const key of ['rawFile','processedFile'])if(!existsSync(root+'data/svm/'+entry[key]))throw new Error(`Missing ${entry[key]}`);
-for(const name of ['index.html','vendor/angle/embed.html']){
+for(const name of ['index.html','vendor/angle/embed.html','vendor/uniformity/index.html','vendor/reflectance/index.html']){
   const dir=name.slice(0,name.lastIndexOf('/')+1);
   const html=readFileSync(root+name,'utf8');
   for(const match of html.matchAll(/(?:src|href)="([^"#?]+)(?:\?[^"#]*)?"/g)){

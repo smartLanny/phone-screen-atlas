@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "基于实测数据的手机频闪与可视角统一展示站",
+  "description": "野生的装机宅屏幕数据库：可视角、频闪、均匀度与反射率对比",
   "license": "MIT",
   "engines": {
     "node": ">=22.13"

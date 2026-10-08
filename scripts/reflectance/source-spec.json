@@ -1,0 +1,273 @@
+{
+  "schemaVersion": 1,
+  "sourceRootLabel": "01单机数据",
+  "units": {
+    "wavelength": "nm",
+    "reflectance": "%"
+  },
+  "axes": {
+    "wavelengthNm": [400, 700],
+    "reflectancePercent": [0, 10],
+    "sampleStepNm": 2,
+    "traceErrorNm": 1,
+    "traceErrorPercentagePoints": 0.05
+  },
+  "palette": [
+    {"name": "blue", "rgb": [31, 119, 180]},
+    {"name": "orange", "rgb": [255, 127, 14]},
+    {"name": "green", "rgb": [44, 160, 44]},
+    {"name": "red", "rgb": [214, 39, 40]},
+    {"name": "purple", "rgb": [148, 103, 189]},
+    {"name": "brown", "rgb": [140, 86, 75]},
+    {"name": "pink", "rgb": [227, 119, 194]},
+    {"name": "gray", "rgb": [127, 127, 127]},
+    {"name": "olive", "rgb": [188, 189, 34]},
+    {"name": "cyan", "rgb": [23, 190, 207]}
+  ],
+  "phones": {
+    "ipad-pro-11-m4": {"name": "iPad Pro 11 M4"},
+    "iphone-16-pro-max": {"name": "iPhone 16 Pro Max"},
+    "iphone-17-pro-max": {"name": "iPhone 17 Pro Max"},
+    "iphone-18-pro-max": {"name": "iPhone 18 Pro Max", "panel": "GH3"},
+    "xiaomi-15-ultra": {"name": "小米 15 Ultra"},
+    "xiaomi-17-ultra": {"name": "小米 17 Ultra 徕卡"},
+    "xiaomi-18-pro-max": {"name": "小米 18 Pro Max"},
+    "huawei-mate-90-pro-max": {"name": "华为 Mate 90 Pro Max 典藏版"},
+    "huawei-mate-80-rs": {"name": "华为 Mate 80 RS"},
+    "huawei-mate-70-air": {"name": "华为 Mate 70 Air"},
+    "oppo-find-n5": {"name": "OPPO Find N5"},
+    "oppo-find-x9": {"name": "OPPO Find X9"},
+    "oppo-find-x9-ultra": {"name": "OPPO Find X9 Ultra"},
+    "oppo-find-x9s-pro": {"name": "OPPO Find X9s Pro"},
+    "oneplus-15": {"name": "一加 15"},
+    "samsung-s25-ultra": {"name": "三星 S25 Ultra"},
+    "honor-magic-v5": {"name": "荣耀 Magic V5"}
+  },
+  "sources": [
+    {
+      "id": "ipad-pro-11-m4-default",
+      "sourcePath": "Apple iPad Pro 11 M4/反射率.png",
+      "copyFile": "ipad-pro-11-m4-default.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "ipad-pro-11-m4", "conditionId": "as-measured", "kind": "total", "color": "blue", "legendPercent": 1.97},
+        {"phoneId": "ipad-pro-11-m4", "conditionId": "as-measured", "kind": "diffuse", "color": "orange", "legendPercent": 0.72}
+      ]
+    },
+    {
+      "id": "iphone-17-pro-max-corroborating",
+      "sourcePath": "Apple iPhone 17 Pro Max/反射率.png",
+      "copyFile": "iphone-17-pro-max-corroborating.png",
+      "role": "corroborating",
+      "note": "独立原图图例标注值与 Find X9 共图中的 iPhone 17 曲线一致；互动数据取同图曲线以保留 SCI/SCE 条件。"
+    },
+    {
+      "id": "iphone-17-pro-max-ar-film",
+      "sourcePath": "Apple iPhone 17 Pro Max/01 20260919 GVC新测试/反射率 抗反膜.png",
+      "copyFile": "iphone-17-pro-max-ar-film.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "iphone-17-pro-max", "conditionId": "anti-reflective-film", "conditionLabel": "抗反膜", "kind": "total", "color": "blue", "legendPercent": 1.40},
+        {"phoneId": "iphone-17-pro-max", "conditionId": "anti-reflective-film", "conditionLabel": "抗反膜", "kind": "diffuse", "color": "orange", "legendPercent": 0.54}
+      ]
+    },
+    {
+      "id": "iphone-18-pro-max-default",
+      "sourcePath": "Apple iPhone 18 Pro Max/反射率.png",
+      "copyFile": "iphone-18-pro-max-default.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "iphone-18-pro-max", "conditionId": "as-measured", "kind": "total", "color": "blue", "legendPercent": 2.60},
+        {"phoneId": "iphone-18-pro-max", "conditionId": "as-measured", "kind": "diffuse", "color": "orange", "legendPercent": 0.37}
+      ]
+    },
+    {
+      "id": "oppo-find-n5-inner",
+      "sourcePath": "OPPO Find N5 20260302/反射率 内屏.png",
+      "copyFile": "oppo-find-n5-inner.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "oppo-find-n5", "conditionId": "inner-display", "conditionLabel": "内屏", "kind": "total", "color": "blue", "legendPercent": 3.18},
+        {"phoneId": "oppo-find-n5", "conditionId": "inner-display", "conditionLabel": "内屏", "kind": "diffuse", "color": "orange", "legendPercent": 1.01}
+      ]
+    },
+    {
+      "id": "oppo-find-n5-outer",
+      "sourcePath": "OPPO Find N5 20260302/反射率 外屏.png",
+      "copyFile": "oppo-find-n5-outer.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "oppo-find-n5", "conditionId": "outer-display", "conditionLabel": "外屏", "kind": "total", "color": "blue", "legendPercent": 4.75},
+        {"phoneId": "oppo-find-n5", "conditionId": "outer-display", "conditionLabel": "外屏", "kind": "diffuse", "color": "orange", "legendPercent": 0.38}
+      ]
+    },
+    {
+      "id": "oppo-find-n5-inner-outer-comparison",
+      "sourcePath": "OPPO Find N5 20260302/反射率 内外屏对比.png",
+      "copyFile": "oppo-find-n5-inner-outer-comparison.png",
+      "role": "excluded",
+      "note": "内屏与外屏已有各自单机曲线，避免重叠复录。"
+    },
+    {
+      "id": "oppo-find-x9-comparison",
+      "sourcePath": "OPPO Find X9/02_亮度/反射率.png",
+      "copyFile": "oppo-find-x9-comparison.png",
+      "role": "curve",
+      "plotBoundsPx": [70, 77, 1307, 634],
+      "series": [
+        {"phoneId": "iphone-17-pro-max", "conditionId": "as-measured", "kind": "total", "color": "blue", "method": "SCI", "legendPercent": 2.81},
+        {"phoneId": "iphone-17-pro-max", "conditionId": "as-measured", "kind": "diffuse", "color": "orange", "method": "SCE", "legendPercent": 0.43},
+        {"phoneId": "oppo-find-x9", "conditionId": "as-measured", "kind": "total", "color": "green", "method": "SCI", "legendPercent": 4.38},
+        {"phoneId": "oppo-find-x9", "conditionId": "as-measured", "kind": "diffuse", "color": "red", "method": "SCE", "legendPercent": 0.43}
+      ]
+    },
+    {
+      "id": "oppo-find-x9-ultra-default",
+      "sourcePath": "OPPO Find X9 Ultra/反射率.png",
+      "copyFile": "oppo-find-x9-ultra-default.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "oppo-find-x9-ultra", "conditionId": "as-measured", "kind": "total", "color": "blue", "legendPercent": 4.36},
+        {"phoneId": "oppo-find-x9-ultra", "conditionId": "as-measured", "kind": "diffuse", "color": "orange", "legendPercent": 0.40}
+      ]
+    },
+    {
+      "id": "oppo-find-x9s-pro-default",
+      "sourcePath": "OPPO Find X9s Pro/反射率.png",
+      "copyFile": "oppo-find-x9s-pro-default.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "oppo-find-x9s-pro", "conditionId": "as-measured", "kind": "total", "color": "blue", "legendPercent": 4.52},
+        {"phoneId": "oppo-find-x9s-pro", "conditionId": "as-measured", "kind": "diffuse", "color": "orange", "legendPercent": 0.44}
+      ]
+    },
+    {
+      "id": "oneplus-15-default",
+      "sourcePath": "一加 15/02_亮度/反射率.png",
+      "copyFile": "oneplus-15-default.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "oneplus-15", "conditionId": "as-measured", "kind": "total", "color": "green", "legendPercent": 4.37},
+        {"phoneId": "oneplus-15", "conditionId": "as-measured", "kind": "diffuse", "color": "red", "legendPercent": 0.39}
+      ]
+    },
+    {
+      "id": "samsung-s25-ultra-ar-film",
+      "sourcePath": "三星 S25 Ultra/反射率.png",
+      "copyFile": "samsung-s25-ultra-ar-film.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "samsung-s25-ultra", "conditionId": "anti-reflective-film", "conditionLabel": "带抗反膜", "kind": "total", "color": "blue", "legendPercent": 1.71},
+        {"phoneId": "samsung-s25-ultra", "conditionId": "anti-reflective-film", "conditionLabel": "带抗反膜", "kind": "diffuse", "color": "orange", "legendPercent": 0.45}
+      ]
+    },
+    {
+      "id": "huawei-mate-70-air-default",
+      "sourcePath": "华为 Mate 70 Air/02_亮度/反射率.png",
+      "copyFile": "huawei-mate-70-air-default.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "huawei-mate-70-air", "conditionId": "as-measured", "kind": "total", "color": "blue", "legendPercent": 4.53},
+        {"phoneId": "huawei-mate-70-air", "conditionId": "as-measured", "kind": "diffuse", "color": "orange", "legendPercent": 0.44}
+      ]
+    },
+    {
+      "id": "huawei-mate-70-air-comparison",
+      "sourcePath": "华为 Mate 70 Air/02_亮度/反射率 五台.png",
+      "copyFile": "huawei-mate-70-air-comparison.png",
+      "role": "curve",
+      "note": "全反射曲线约 615 nm 后被图例遮挡；低位漫反射红线在图例下方仍可读到 700 nm，但保留中部 68 nm 与其他像素提取缺口，不插值。Pura70 与 Mate Air 复用蓝/橙颜色且轨迹接近，不拆分。",
+      "series": [
+        {"phoneId": "iphone-16-pro-max", "conditionId": "as-measured", "kind": "total", "color": "green", "rangeNm": [400, 615], "legendPercent": 4.53},
+        {"phoneId": "iphone-16-pro-max", "conditionId": "as-measured", "kind": "diffuse", "color": "red", "rangeNm": [400, 700], "legendPercent": 0.40, "minimumCoverageFraction": 0.6, "allowLongGap": true}
+      ]
+    },
+    {
+      "id": "huawei-mate-80-rs-default",
+      "sourcePath": "华为 Mate 80 RS/02_亮度/反射率.png",
+      "copyFile": "huawei-mate-80-rs-default.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "huawei-mate-80-rs", "conditionId": "as-measured", "kind": "total", "color": "blue", "legendPercent": 3.66},
+        {"phoneId": "huawei-mate-80-rs", "conditionId": "as-measured", "kind": "diffuse", "color": "orange", "legendPercent": 0.43}
+      ]
+    },
+    {
+      "id": "huawei-mate-80-rs-comparison",
+      "sourcePath": "华为 Mate 80 RS/02_亮度/反射率对比.png",
+      "copyFile": "huawei-mate-80-rs-comparison.png",
+      "role": "excluded",
+      "note": "对比曲线涉及的机型均有单机曲线文件，避免重复录入。"
+    },
+    {
+      "id": "huawei-mate-90-pro-max-default",
+      "sourcePath": "华为 Mate 90 Prro Max 典藏版/反射率.png",
+      "copyFile": "huawei-mate-90-pro-max-default.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "huawei-mate-90-pro-max", "conditionId": "as-measured", "kind": "total", "color": "blue", "legendPercent": 1.41},
+        {"phoneId": "huawei-mate-90-pro-max", "conditionId": "as-measured", "kind": "diffuse", "color": "orange", "legendPercent": 0.40}
+      ]
+    },
+    {
+      "id": "xiaomi-17-ultra-default",
+      "sourcePath": "小米 17 Ultra 徕卡/02亮度/反射率.png",
+      "copyFile": "xiaomi-17-ultra-default.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "xiaomi-17-ultra", "conditionId": "as-measured", "kind": "total", "color": "blue", "legendPercent": 5.04},
+        {"phoneId": "xiaomi-17-ultra", "conditionId": "as-measured", "kind": "diffuse", "color": "orange", "legendPercent": 0.39}
+      ]
+    },
+    {
+      "id": "xiaomi-17-ultra-total-comparison",
+      "sourcePath": "小米 17 Ultra 徕卡/02亮度/反射率 全反对比.png",
+      "copyFile": "xiaomi-17-ultra-total-comparison.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "xiaomi-15-ultra", "conditionId": "as-measured", "kind": "total", "color": "blue", "legendPercent": 4.70}
+      ]
+    },
+    {
+      "id": "xiaomi-17-ultra-diffuse-comparison",
+      "sourcePath": "小米 17 Ultra 徕卡/02亮度/反射率 漫反对比.png",
+      "copyFile": "xiaomi-17-ultra-diffuse-comparison.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "xiaomi-15-ultra", "conditionId": "as-measured", "kind": "diffuse", "color": "blue", "legendPercent": 0.53}
+      ]
+    },
+    {
+      "id": "xiaomi-18-pro-max-default",
+      "sourcePath": "小米 18 Pro Max/反射率.png",
+      "copyFile": "xiaomi-18-pro-max-default.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "xiaomi-18-pro-max", "conditionId": "as-measured", "kind": "total", "color": "blue", "legendPercent": 4.78},
+        {"phoneId": "xiaomi-18-pro-max", "conditionId": "as-measured", "kind": "diffuse", "color": "orange", "legendPercent": 0.28}
+      ]
+    },
+    {
+      "id": "xiaomi-18-pro-max-screen-protector",
+      "sourcePath": "小米 18 Pro Max/反射率 贴膜.png",
+      "copyFile": "xiaomi-18-pro-max-screen-protector.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "xiaomi-18-pro-max", "conditionId": "screen-protector", "conditionLabel": "贴膜", "kind": "total", "color": "blue", "legendPercent": 4.87},
+        {"phoneId": "xiaomi-18-pro-max", "conditionId": "screen-protector", "conditionLabel": "贴膜", "kind": "diffuse", "color": "orange", "legendPercent": 0.34}
+      ]
+    },
+    {
+      "id": "honor-magic-v5-default",
+      "sourcePath": "荣耀 Magic V5/反射率.png",
+      "copyFile": "honor-magic-v5-default.png",
+      "role": "curve",
+      "series": [
+        {"phoneId": "honor-magic-v5", "conditionId": "outer-display", "conditionLabel": "外屏", "kind": "total", "color": "blue", "legendPercent": 1.84},
+        {"phoneId": "honor-magic-v5", "conditionId": "outer-display", "conditionLabel": "外屏", "kind": "diffuse", "color": "orange", "legendPercent": 0.28},
+        {"phoneId": "honor-magic-v5", "conditionId": "inner-display", "conditionLabel": "内屏", "kind": "total", "color": "green", "legendPercent": 1.58},
+        {"phoneId": "honor-magic-v5", "conditionId": "inner-display", "conditionLabel": "内屏", "kind": "diffuse", "color": "red", "legendPercent": 0.44}
+      ]
+    }
+  ]
+}
