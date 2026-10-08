@@ -21,3 +21,59 @@ html, body, #root, [data-testid="shell"] {
 html { color-scheme: dark; }
 body { overflow: hidden; background: #07090d; }
 [data-testid="main"] { min-width: 0; }
+
+/* One unobtrusive mark in the original canvas's top margin. */
+body::after {
+  content: "野生的装机宅";
+  position: fixed;
+  top: 8px;
+  right: 16px;
+  z-index: 40;
+  color: rgba(183, 195, 211, .26);
+  font: 500 15px/22px system-ui, sans-serif;
+  letter-spacing: .15em;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Expose only the original Inspector2D slider subtree, without reparenting React DOM. */
+html[data-atlas-svm-view="chart2d"] [data-testid="stage-outer"] { bottom: 96px !important; }
+html[data-atlas-svm-view="chart2d"] [data-testid="inspector"] {
+  display: flex !important;
+  position: fixed !important;
+  inset: auto 0 0 !important;
+  width: 100% !important;
+  height: 96px !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(180, 195, 220, .1) !important;
+  transform: none !important;
+  animation: none !important;
+  z-index: 30 !important;
+}
+html[data-atlas-svm-view="chart2d"] [data-testid="inspector"] > div:has([data-testid="inspector-chart2d"]) {
+  width: 100% !important;
+  height: 100% !important;
+}
+html[data-atlas-svm-view="chart2d"] [data-testid="inspector"] > div:not(:has([data-testid="inspector-chart2d"])):not([data-testid="inspector-chart2d"]),
+html[data-atlas-svm-view="chart2d"] [data-testid="inspector"] > div > div:not([data-testid="inspector-chart2d"]),
+[data-testid="inspector-chart2d"] > section:not(:has([data-atlas-gray-control])),
+[data-testid="inspector-chart2d"] > section:has([data-atlas-gray-control]) > div:first-child,
+[data-testid="inspector-chart2d"] > section:has([data-atlas-gray-control]) > div:last-child > :not([data-atlas-gray-control]),
+[data-testid="chart2d-transport"],
+[data-testid="chart2d-toolbar"] {
+  display: none !important;
+}
+[data-testid="inspector-chart2d"] {
+  width: 100% !important;
+  overflow: hidden !important;
+}
+[data-testid="inspector-chart2d"] > section:has([data-atlas-gray-control]) {
+  display: block !important;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 8px 16px !important;
+  border: 0 !important;
+}
+[data-testid="inspector-chart2d"] > section:has([data-atlas-gray-control]) > div:last-child { margin-top: 0 !important; }
+[data-atlas-gray-control] { display: flex !important; }

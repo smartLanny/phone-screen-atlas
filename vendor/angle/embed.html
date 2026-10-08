@@ -3,13 +3,26 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="dark">
 <title>可视角度仿真</title>
 <link rel="stylesheet" href="style.css?v=15">
 <style>
-html,body { background:radial-gradient(ellipse at 50% 45%,#1d222c 0%,#101319 70%) !important; }
-body > *:not(#gl):not(script):not(style) { display:none !important; }
-#gl { outline:none; }
+html,body {background:radial-gradient(ellipse at 35% 45%,#1d222c 0%,#101319 70%) !important;}
+body > *:not(#gl):not(#atlasControls):not(#atlasWatermark):not(script):not(style) {display:none !important;}
+#gl {outline:none;}
+#atlasControls {position:absolute;right:0;top:0;bottom:0;width:320px;z-index:2;background:#11151c;border-left:1px solid #272d39;overflow:auto;}
+#atlasControls #secPad {display:block !important;padding:20px 18px;border:0;}
+#atlasControls #pad {max-width:280px;}
+#atlasControls .pad-read {font-size:11px;}
+#atlasControls .mini-select {font-size:10px;}
+#atlasControls .angle-row .chips button {font-size:10px;padding:5px 7px;}
+#atlasWatermark {position:absolute;left:20px;bottom:16px;z-index:1;color:#9aa6ba;opacity:.25;font-size:18px;letter-spacing:2px;pointer-events:none;user-select:none;}
+@media(max-width:700px){
+ #atlasControls {left:0;right:0;top:360px;bottom:0;width:auto;border-left:0;border-top:1px solid #272d39;}
+ #atlasControls #secPad {padding:16px 18px;max-width:380px;margin:auto;}
+ #atlasControls #pad {max-width:270px;}
+ #atlasWatermark {top:329px;bottom:auto;left:17px;font-size:15px;}
+}
 </style><script>window.ATLAS_EMBED=true;</script></head>
 <body data-layout="wide">
 <div class="sframe" id="sf0"></div>
@@ -205,7 +218,7 @@ body > *:not(#gl):not(script):not(style) { display:none !important; }
 <div id="hint">拖动画面转动手机 · 拖动左侧方向盘直接选角度 · 滚轮调距离 · 空格自动扫描</div>
 <div id="drop">松开以加载图片</div>
 
-<script src="data.js"></script>
+<script src="data.js?v=20261008-six-directions"></script>
 <script src="model.js?v=12"></script>
 <script src="avatar.js"></script>
 <script src="patterns.js?v=12"></script>
@@ -213,6 +226,6 @@ body > *:not(#gl):not(script):not(style) { display:none !important; }
 <script src="phone3d.js"></script>
 <script src="viz.js?v=12"></script>
 <!-- 三维场景（scene3d-person.js、scene3d.js）只在进入场景演示时再加载，见 app.js -->
-<script src="embed-app.js"></script>
+<aside id="atlasControls" aria-label="原版观看方向"></aside><div id="atlasWatermark" aria-hidden="true">野生的装机宅</div><script src="embed-app.js?v=20261008-pad"></script>
 </body>
 </html>

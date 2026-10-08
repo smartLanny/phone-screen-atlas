@@ -174,7 +174,12 @@
 
   /** 舞台可用区域（去掉左右栏 / 底部抽屉 / 左上角读数）。 */
   function stageRect() {
-    if (window.ATLAS_EMBED) return { x0: 8, x1: canvas.clientWidth - 8, top: 12, bottom: canvas.clientHeight - 12 };
+    if (window.ATLAS_EMBED) {
+      const controls = $('atlasControls').getBoundingClientRect();
+      return controls.top > 0
+        ? {x0:8, x1:canvas.clientWidth-8, top:12, bottom:controls.top-48}
+        : {x0:8, x1:controls.left-12, top:12, bottom:canvas.clientHeight-48};
+    }
     const W = canvas.clientWidth, H = canvas.clientHeight, L = document.body.dataset.layout;
     const rc = (id) => $(id).getBoundingClientRect();
     if (S.clean) return { x0: 0, x1: W, top: rc('hud').bottom + 8, bottom: H - 12 };
@@ -906,7 +911,7 @@
     S.tilt = [-theta * Math.cos(S.psi * DEG), -theta * Math.sin(S.psi * DEG)];
     syncThetaChips();
     requestRender();
-    if (window.ATLAS_EMBED && atlasConnected) parent.postMessage({type:'atlas-angle-change',theta:S.theta,psi:S.psi},location.origin);
+    atlasNotify();
   }
   /** 拖动画面时直接改手机姿态，再反算眼睛方向。 */
   function setTilt(tx, ty) {
@@ -917,7 +922,7 @@
     if (mag > 0.05) S.psi = AngleModel.norm360(Math.atan2(-ty, -tx) / DEG);
     syncThetaChips();
     requestRender();
-    if (window.ATLAS_EMBED && atlasConnected) parent.postMessage({type:'atlas-angle-change',theta:S.theta,psi:S.psi},location.origin);
+    atlasNotify();
   }
   function syncThetaChips() {
     document.querySelectorAll('#thetaChips button').forEach((b) => b.classList.toggle('on', Math.abs(+b.dataset.t - S.theta) < 0.5));
@@ -984,6 +989,12 @@
   // ---------- 布局 ----------
   const SECS = [...document.querySelectorAll('#panelBody .sec')];
   function applyLayout() {
+    if (window.ATLAS_EMBED) {
+      document.body.dataset.layout = 'embed';
+      const controls = $('atlasControls');
+      if ($('secPad').parentElement !== controls) controls.appendChild($('secPad'));
+      return;
+    }
     const W = window.innerWidth, H = window.innerHeight;
     const L = W >= 1180 && H >= 600 ? 'wide' : W > 760 ? 'side' : 'sheet';
     const body = document.body;
@@ -1060,7 +1071,7 @@
     setDist((S.dist / 10) * Math.exp(e.deltaY * 0.001));
   }, { passive: false });
   window.addEventListener('keydown', (e) => {
-    if (appMode === 'scene') return;   // 场景演示模式下快捷键交给三维场景
+    if (appMode === 'scene' || (window.ATLAS_EMBED && /^[pPhH]$/.test(e.key))) return;   // 场景演示模式下快捷键交给三维场景
     if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
     const k = { ArrowLeft: [-2, 0], ArrowRight: [2, 0], ArrowUp: [0, 2], ArrowDown: [0, -2] }[e.key];
     if (k) { e.preventDefault(); stopSweep(); setTilt(S.tilt[0] + k[0], S.tilt[1] + k[1]); return; }
@@ -1339,32 +1350,37 @@
   // 调试 / 截图用
   window.viewAngle = { S, setView, animateTo, setClean, setDist, getModel, render: () => render() };
 
-  // Bridge added by Screen Atlas. Original optical model and WebGL shaders are retained.
+  // Embed the original direction pad and its existing input handlers.
+  function atlasNotify() {
+    if (atlasConnected) parent.postMessage({type:'atlas-angle-change',theta:S.theta,psi:S.psi,padMetric:S.padMetric,pal:S.pal},location.origin);
+  }
   S.clean = true;
   document.body.classList.add('clean');
+  $('padMetric').addEventListener('click', atlasNotify);
+  $('palette').addEventListener('change', atlasNotify);
   window.addEventListener('message', (event) => {
     if (event.origin !== location.origin || event.source !== parent || event.data?.type !== 'atlas-angle-set') return;
     const data = event.data;
-    atlasConnected = true;
-    const ids = data.profiles.filter((id) => byId(id)).slice(0, 2);
+    if (!Array.isArray(data.profiles) || !Number.isFinite(data.theta) || !Number.isFinite(data.psi)) return;
+    const ids = data.profiles.filter(id => typeof id === 'string' && byId(id)).slice(0,2);
     if (!ids.length) return;
+    atlasConnected = true;
     S.device = byId(ids[0]).device;
     S.privacy = byId(ids[0]).privacy;
     S.compare = ids.length === 2;
-    S.slots = ids.length === 2 ? ids : [ids[0], ids[0]];
+    S.slots = ids.length === 2 ? ids : [ids[0],ids[0]];
     S.stereo = false;
     S.dist = 300;
     S.colors['小米 18 Pro Max'] = 'blue';
     S.colors['iPhone 18 Pro Max GH3'] = 'silver';
+    if (data.padMetric === 'lum' || data.padMetric === 'jncd') S.padMetric = data.padMetric;
+    if (typeof data.pal === 'string' && Object.hasOwn(Viz.PALETTES,data.pal)) S.pal = data.pal;
+    syncSeg('padMetric', S.padMetric);
     syncProfileUI();
-    loadPattern(data.pattern || 'ui');
-    setView(data.theta, data.psi);
+    loadPattern(data.pattern === 'dark' ? 'dark' : 'ui');
+    setView(data.theta,data.psi);
     resize();
   });
-  window.addEventListener('wheel', (e) => e.stopImmediatePropagation(), {capture:true});
-  window.addEventListener('keydown', (e) => {
-    if (e.key === 'Tab') return;
-    e.stopImmediatePropagation();
-  }, {capture:true});
-  parent.postMessage({type:'atlas-angle-ready'}, location.origin);
+  window.addEventListener('wheel', e => e.stopImmediatePropagation(), {capture:true});
+  parent.postMessage({type:'atlas-angle-ready'},location.origin);
 })();

@@ -2,7 +2,7 @@ import {spawnSync} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 import {readFileSync,existsSync} from 'node:fs';
 const root=fileURLToPath(new URL('../',import.meta.url));
-for(const args of [['--check','app.js'],['--check','vendor/angle/embed-app.js'],['scripts/svm/rebuild.mjs','--check'],['scripts/svm/audit.mjs'],['scripts/build-svm-embed.mjs','--check'],['vendor/svm/verify-bridge.mjs']]){
+for(const args of [['--check','app.js'],['--check','vendor/angle/embed-app.js'],['scripts/check-angle-data.mjs'],['scripts/svm/rebuild.mjs','--check'],['scripts/svm/audit.mjs'],['scripts/build-svm-embed.mjs','--check'],['vendor/svm/verify-bridge.mjs']]){
   const result=spawnSync(process.execPath,args,{cwd:root,stdio:'inherit'});
   if(result.status!==0)process.exit(result.status||1);
 }

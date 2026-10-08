@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/smartLanny/phone-view-angle-sim",
-  "commit": "5ddf95a17b69720bd72bc9941d1f9a6ea42be062",
+  "commit": "437ad1045d83a44088e451ddb4c31339d1a9c142",
   "files": [
     "index.html",
     "style.css",
@@ -13,5 +13,14 @@
     "viz.js",
     "app.js"
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "measurementManifest": "docs/measurement-sources.json",
+  "directionsPerProfile": [
+    0,
+    30,
+    60,
+    90,
+    120,
+    150
+  ]
 }

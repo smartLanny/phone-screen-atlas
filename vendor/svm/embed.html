@@ -5055,6 +5055,62 @@ html { color-scheme: dark; }
 body { overflow: hidden; background: #07090d; }
 [data-testid="main"] { min-width: 0; }
 
+/* One unobtrusive mark in the original canvas's top margin. */
+body::after {
+  content: "野生的装机宅";
+  position: fixed;
+  top: 8px;
+  right: 16px;
+  z-index: 40;
+  color: rgba(183, 195, 211, .26);
+  font: 500 15px/22px system-ui, sans-serif;
+  letter-spacing: .15em;
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Expose only the original Inspector2D slider subtree, without reparenting React DOM. */
+html[data-atlas-svm-view="chart2d"] [data-testid="stage-outer"] { bottom: 96px !important; }
+html[data-atlas-svm-view="chart2d"] [data-testid="inspector"] {
+  display: flex !important;
+  position: fixed !important;
+  inset: auto 0 0 !important;
+  width: 100% !important;
+  height: 96px !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(180, 195, 220, .1) !important;
+  transform: none !important;
+  animation: none !important;
+  z-index: 30 !important;
+}
+html[data-atlas-svm-view="chart2d"] [data-testid="inspector"] > div:has([data-testid="inspector-chart2d"]) {
+  width: 100% !important;
+  height: 100% !important;
+}
+html[data-atlas-svm-view="chart2d"] [data-testid="inspector"] > div:not(:has([data-testid="inspector-chart2d"])):not([data-testid="inspector-chart2d"]),
+html[data-atlas-svm-view="chart2d"] [data-testid="inspector"] > div > div:not([data-testid="inspector-chart2d"]),
+[data-testid="inspector-chart2d"] > section:not(:has([data-atlas-gray-control])),
+[data-testid="inspector-chart2d"] > section:has([data-atlas-gray-control]) > div:first-child,
+[data-testid="inspector-chart2d"] > section:has([data-atlas-gray-control]) > div:last-child > :not([data-atlas-gray-control]),
+[data-testid="chart2d-transport"],
+[data-testid="chart2d-toolbar"] {
+  display: none !important;
+}
+[data-testid="inspector-chart2d"] {
+  width: 100% !important;
+  overflow: hidden !important;
+}
+[data-testid="inspector-chart2d"] > section:has([data-atlas-gray-control]) {
+  display: block !important;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 8px 16px !important;
+  border: 0 !important;
+}
+[data-testid="inspector-chart2d"] > section:has([data-atlas-gray-control]) > div:last-child { margin-top: 0 !important; }
+[data-atlas-gray-control] { display: flex !important; }
+
 </style>
 </head>
   <body>
@@ -5068,12 +5124,32 @@ body { overflow: hidden; background: #07090d; }
   <script id="atlas-svm-bridge">
 (() => {
   'use strict';
+  // The original module is deferred; keep this iframe ephemeral before its bootstrap reads storage.
+  Object.defineProperties(window, {
+    indexedDB: { value: undefined, configurable: true },
+    localStorage: { value: { getItem: () => null, setItem: () => {}, removeItem: () => {} }, configurable: true },
+  });
+  const shellKeys = new Set(['1', '2', '3', 't', 'f', 'h', 'r']);
+  function blockShellShortcut(event, keyup = false) {
+    if (event.defaultPrevented || event.isComposing || event.ctrlKey || event.metaKey || event.altKey) return;
+    const space = event.code === 'Space' || event.key === ' ';
+    if (keyup ? !space : (!space && (event.shiftKey || !shellKeys.has(event.key.toLowerCase())))) return;
+    const control = event.target?.closest?.('input, textarea, select, button, a[href], [role="slider"], [role="button"], [contenteditable]:not([contenteditable="false"])');
+    // Native controls keep their default key behavior; the original shell must not also receive Space keyup.
+    if (!control) event.preventDefault();
+    event.stopImmediatePropagation();
+  }
+  window.addEventListener('keydown', event => blockShellShortcut(event), true);
+  window.addEventListener('keyup', event => blockShellShortcut(event, true), true);
   const files = new Set(["iPhone17ProMax.json","iPhone17ProMax_smooth.json","xiaomi17ultra_leica_dc_120hz.json","xiaomi17ultra_leica_ltpo_120hz.json","huawei_mate70air.json","huawei_mate70air_60hz.json","huawei_mate70air_low_frequency.json","huawei_mate70air_low_frequency_60hz.json","huawei_mate80rs.json","huawei_mate80rs_60hz.json","huawei_mate80rs_low_frequency.json","huawei_mate80rs_low_frequency_60hz.json","xiaomi18promax_adaptive_pro_off.json","xiaomi18promax_adaptive_pro_on.json","iPhone18ProMax.json","iPhone18ProMax_smooth.json"]);
   const views = ['scene3d', 'chart2d', 'stats'];
   const keys = new Set(['type', 'files', 'view', 'sliceGray', 'sliceNits', 'sliceMode', 'terrainView', 'layout', 'denoise']);
   let store;
+  let originalRecords;
   let pending;
   let announced = false;
+  let applying = false;
+  let domScheduled = false;
   const send = (data) => parent.postMessage(data, location.origin);
   const fail = (message) => send({ type: 'atlas-svm-error', message });
   const inRange = (value, min, max) => typeof value === 'number' && Number.isFinite(value) && value >= min && value <= max;
@@ -5087,20 +5163,20 @@ body { overflow: hidden; background: #07090d; }
       ['terrainView', ['perspective', 'top', 'front', 'side']], ['layout', ['single', 'sideBySide', 'diff']],
     ]) if (key in data && !values.includes(data[key])) return false;
     if ('sliceGray' in data && !inRange(data.sliceGray, 0, 255)) return false;
-    if ('sliceNits' in data && !inRange(data.sliceNits, 0.01, 100000)) return false;
+    if ('sliceNits' in data && !inRange(data.sliceNits, 0.01, 500)) return false;
     if ('denoise' in data && typeof data.denoise !== 'boolean') return false;
     return true;
   }
   function apply(data) {
     const state = store.getState();
     const ids = data.files.map(file => `bundled:${file}`);
-    if (ids.some(id => !state.records.some(record => record.id === id))) {
+    if (ids.some(id => !originalRecords.has(id))) {
       fail('Requested bundled record is unavailable.');
       return;
     }
     const next = {
       activeId: ids[0], compareId: ids[1] ?? null, compareExtraIds: [],
-      hiddenIds: state.records.filter(record => !ids.includes(record.id)).map(record => record.id),
+      records: ids.map(id => originalRecords.get(id)), hiddenIds: [],
       layout: ids.length === 1 ? 'single' : (data.layout ?? 'sideBySide'),
       presenting: false,
       maxNits: 500,
@@ -5109,18 +5185,42 @@ body { overflow: hidden; background: #07090d; }
     if ('view' in data) next.tab = data.view;
     if ('terrainView' in data) next.view = data.terrainView;
     for (const key of ['sliceGray', 'sliceNits', 'sliceMode', 'denoise']) if (key in data) next[key] = data[key];
-    store.setState(next);
+    applying = true;
+    try { store.setState(next); } finally { applying = false; }
+    scheduleDOM();
     send({ type: 'atlas-svm-applied', files: data.files, view: store.getState().tab });
   }
   function ready() {
     if (!store.getState().ready || announced) return;
     announced = true;
-    store.setState({
-      tab: 'scene3d', view: 'top', maxNits: 500,
-      overlays: { ...store.getState().overlays, values: false, title: false, axes: true, colorbar: true, contours: true },
-    });
+    originalRecords = new Map(store.getState().records.map(record => [record.id, record]));
+    applying = true;
+    try {
+      store.setState({
+        tab: 'scene3d', view: 'top', maxNits: 500,
+        overlays: { ...store.getState().overlays, values: false, title: false, axes: true, colorbar: true, contours: true },
+      });
+    } finally { applying = false; }
     if (pending) { const data = pending; pending = undefined; apply(data); }
     send({ type: 'atlas-svm-ready', files: [...files], views });
+  }
+  function scheduleDOM() {
+    if (domScheduled || typeof document === 'undefined') return;
+    domScheduled = true;
+    requestAnimationFrame(() => {
+      domScheduled = false;
+      const state = store?.getState();
+      if (!state) return;
+      document.documentElement.dataset.atlasSvmView = state.tab;
+      if (state.tab !== 'chart2d') return;
+      const body = document.querySelector('[data-testid="inspector-chart2d"]');
+      if (!body) {
+        document.querySelector('[data-testid="inspector-toggle"], [data-testid="inspector-expand"]')?.click();
+        return;
+      }
+      const control = body.querySelector('section:first-child input[type="range"]')?.parentElement;
+      if (control) control.setAttribute('data-atlas-gray-control', '');
+    });
   }
   window.addEventListener('message', event => {
     if (event.source !== parent || event.origin !== location.origin) return;
@@ -5134,8 +5234,18 @@ body { overflow: hidden; background: #07090d; }
     const candidate = window.__svm?.store;
     if (!candidate) return false;
     store = candidate;
-    store.subscribe(ready);
+    store.subscribe((state, previous) => {
+      ready();
+      scheduleDOM();
+      if (announced && !applying && previous && ['tab', 'sliceMode', 'sliceGray', 'sliceNits'].some(key => state[key] !== previous[key])) {
+        send({ type: 'atlas-svm-change', view: state.tab, sliceMode: state.sliceMode, sliceGray: state.sliceGray, sliceNits: state.sliceNits });
+      }
+    });
+    if (typeof document !== 'undefined') {
+      new MutationObserver(scheduleDOM).observe(document.getElementById('root'), { childList: true, subtree: true });
+    }
     ready();
+    scheduleDOM();
     return true;
   }
   if (!connect()) {
