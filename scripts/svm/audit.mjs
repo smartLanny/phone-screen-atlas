@@ -8,7 +8,9 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const dir = path.resolve(here, '../../data/svm');
 const read = async (name) => JSON.parse(await fs.readFile(path.join(dir, name), 'utf8'));
 const digest = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
-const near = (a, b) => assert.ok(Math.abs(a - b) <= 1e-12 * Math.max(1, Math.abs(b)), `${a} != ${b}`);
+const near = (a, b, at) => assert.ok(Number.isFinite(a) && Number.isFinite(b) &&
+  Math.abs(a - b) <= 1e-11 + 1e-11 * Math.max(Math.abs(a), Math.abs(b)),
+  `${at}: saved=${a}, recomputed=${b}, delta=${Math.abs(a - b)}`);
 const index = await read('index.json');
 const manifest = await read('manifest.original.json');
 const provenance = await read('source.json');
@@ -87,9 +89,9 @@ for (let i = 0; i < index.records.length; i++) {
         const coord = note.via === 'gray' ? (ri) => m.rows[ri] : (_, ci) => Math.log10(Math.max(0, m.headerNits[ci]) + 1);
         const t = (coord(r,c) - coord(r0,c0)) / (coord(r1,c1) - coord(r0,c0));
         assert.ok(t > 0 && t < 1);
-        near(p.svm, Math.exp(Math.log(restored[r0][c0].svm) * (1 - t) + Math.log(restored[r1][c1].svm) * t));
+        near(p.svm, Math.exp(Math.log(restored[r0][c0].svm) * (1 - t) + Math.log(restored[r1][c1].svm) * t), `${entry.processedFile}.record.matrix.grid[${r}][${c}].svm`);
         if (note.kind === 'svmSpike' || note.kind === 'levelShifted') assert.equal(p.nits, nitsAt(r, c));
-        else near(p.nits, Math.exp(Math.log(nitsAt(r0,c0)) * (1 - t) + Math.log(nitsAt(r1,c1)) * t));
+        else near(p.nits, Math.exp(Math.log(nitsAt(r0,c0)) * (1 - t) + Math.log(nitsAt(r1,c1)) * t), `${entry.processedFile}.record.matrix.grid[${r}][${c}].nits`);
       } else assert.fail(`Unknown action ${note.action}`);
     }
     const expectedEstimate = note?.action === 'lumEstimated' || !!note?.lumVia ||

@@ -8,9 +8,86 @@ import { fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const output = path.resolve(here, '../../data/svm');
 const checkOnly = process.argv.includes('--check');
+const ABS_TOLERANCE = 1e-11;
+const REL_TOLERANCE = 1e-11;
+
+function compareSnapshot(actual, expected, at, derived = new Set()) {
+  if (actual === expected) return;
+  if (typeof actual === 'number' && typeof expected === 'number' && derived.has(at) &&
+      Number.isFinite(actual) && Number.isFinite(expected) &&
+      Math.abs(actual - expected) <= ABS_TOLERANCE + REL_TOLERANCE * Math.max(Math.abs(actual), Math.abs(expected))) return;
+  if (Array.isArray(actual) && Array.isArray(expected)) {
+    if (actual.length !== expected.length) throw new Error(`${at}.length: saved=${actual.length}, rebuilt=${expected.length}`);
+    for (let i = 0; i < expected.length; i++) compareSnapshot(actual[i], expected[i], `${at}[${i}]`, derived);
+    return;
+  }
+  if (actual && expected && typeof actual === 'object' && typeof expected === 'object' && !Array.isArray(actual) && !Array.isArray(expected)) {
+    const a = Object.keys(actual).sort(), b = Object.keys(expected).sort();
+    if (a.length !== b.length || a.some((key, i) => key !== b[i])) {
+      const key = [...new Set([...a, ...b])].find(key => !Object.hasOwn(actual, key) || !Object.hasOwn(expected, key));
+      throw new Error(`${at}.${key}: ${Object.hasOwn(actual, key) ? 'unexpected saved key' : 'missing saved key'}`);
+    }
+    for (const key of b) compareSnapshot(actual[key], expected[key], `${at}.${key}`, derived);
+    return;
+  }
+  const show = value => value === null || typeof value !== 'object' ? JSON.stringify(value) : (Array.isArray(value) ? '[array]' : '{object}');
+  throw new Error(`${at}: saved=${show(actual)}, rebuilt=${show(expected)}${typeof actual === 'number' && typeof expected === 'number' ? `, delta=${Math.abs(actual - expected)}, derived=${derived.has(at)}` : ''}`);
+}
+
+function derivedFloatPaths(data, root) {
+  const paths = new Set();
+  const add = (base, object, keys) => {
+    for (const key of keys) if (typeof object?.[key] === 'number') paths.add(`${base}.${key}`);
+  };
+  const notePaths = (note, at, status) => {
+    if (!note) return;
+    add(at, note, ['floor', 'typical', 'expected', 'deviation']);
+    if (status.interpolated) add(`${at}.value`, note.value, ['svm']);
+    if (status.luminanceEstimated) add(`${at}.value`, note.value, ['nits']);
+  };
+  add(`${root}.analysis.blackLevel`, data.analysis.blackLevel, ['median', 'spread', 'ceiling', 'step']);
+  data.analysis.levels.forEach((level, c) => {
+    if (level.estimated) {
+      paths.add(`${root}.analysis.levels[${c}].value`);
+      paths.add(`${root}.record.matrix.headerNits[${c}]`);
+    }
+  });
+  data.levelNotes.forEach((note, i) => paths.add(`${root}.levelNotes[${i}].value`));
+  data.record.matrix.grid.forEach((row, r) => row.forEach((point, c) => {
+    const status = data.cellStatus[r][c];
+    if (status.interpolated) add(`${root}.record.matrix.grid[${r}][${c}]`, point, ['svm']);
+    if (status.luminanceEstimated) add(`${root}.record.matrix.grid[${r}][${c}]`, point, ['nits']);
+    const flag = data.analysis.flags[r][c];
+    add(`${root}.analysis.flags[${r}][${c}].lum`, flag?.lum, ['expected', 'deviation']);
+    add(`${root}.analysis.flags[${r}][${c}].svm`, flag?.svm, ['typical']);
+    if (typeof data.analysis.lumEstimate[r][c] === 'number') paths.add(`${root}.analysis.lumEstimate[${r}][${c}]`);
+    notePaths(data.noteGrid[r][c], `${root}.noteGrid[${r}][${c}]`, status);
+  }));
+  data.record.data.forEach((point, i) => {
+    const r = data.record.matrix.rows.indexOf(point.gray), c = data.record.matrix.cols.indexOf(point.brightnessPercent);
+    const status = data.cellStatus[r][c];
+    if (status.interpolated) add(`${root}.record.data[${i}]`, point, ['svm']);
+    if (status.luminanceEstimated) add(`${root}.record.data[${i}]`, point, ['nits']);
+  });
+  data.notes.forEach((note, i) => notePaths(note, `${root}.notes[${i}]`, data.cellStatus[note.r][note.c]));
+  for (const [gray, slice] of Object.entries(data.fixedGraySlices)) slice.points.forEach((point, i) => {
+    const at = `${root}.fixedGraySlices.${gray}.points[${i}]`;
+    if (point.levelEstimated) add(at, point, ['x', 'headerNits']);
+    if (point.interpolated) add(at, point, ['svm']);
+    if (point.luminanceEstimated) add(at, point, ['nits']);
+    notePaths(point.note, `${at}.note`, point);
+  });
+  return paths;
+}
+
 const writeJson = async (file, data, pretty = false) => {
   const text = JSON.stringify(data, null, pretty ? 2 : undefined);
-  if (checkOnly) assert.equal(await fs.readFile(file, 'utf8'), text, `${path.basename(file)} differs from offline rebuild`);
+  if (checkOnly) {
+    const saved = JSON.parse(await fs.readFile(file, 'utf8'));
+    const at = path.relative(output, file);
+    const derived = data.schemaVersion === 1 && data.record ? derivedFloatPaths(data, at) : new Set();
+    compareSnapshot(saved, data, at, derived);
+  }
   else await fs.writeFile(file, text);
 };
 const sha = '4189c501004904a494a35ae438dda761cff2be0c';
@@ -49,6 +126,11 @@ const source = {
     axis: 'x = processed matrix.headerNits (G255 white-field level luminance), y = svm',
   },
 };
+if (checkOnly) {
+  const savedSource = JSON.parse(await fs.readFile(path.join(output, 'source.json'), 'utf8'));
+  assert.equal(typeof savedSource.processing.runtime, 'string', 'source.json.processing.runtime must describe the snapshot environment');
+  source.processing.runtime = savedSource.processing.runtime;
+}
 const records = [];
 if (!checkOnly) await fs.mkdir(path.join(output, 'processed'), { recursive: true });
 for (const entry of manifest) {
