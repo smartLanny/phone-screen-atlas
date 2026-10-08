@@ -15,7 +15,7 @@
 - 说明点击打开，不常驻详细数字或引用链接；水印仅在可视角和频闪图表留白各保留一处，不覆盖手机、曲线或色块。
 - 窄屏双机热力图纵排；二维曲线在同一张图内对比。
 
-6 个机型、16 条频闪记录。小米 18 Pro Max 与 iPhone 18 Pro Max 的默认／防窥状态各含 0°、30°、60°、90°、120°、150° 六个实测方向（正负角度合计 12 条方向线）。iPhone 18 Pro Max 两类测量来自同一台 GH3 面板手机。
+7 个机型、16 条频闪记录。华为 Mate 90 Pro Max 典藏版已接入六方向可视角，频闪源文件待补充，机身暂用原通用示意外观。小米 18 Pro Max 与 iPhone 18 Pro Max 的默认／防窥状态各含 0°、30°、60°、90°、120°、150° 六个实测方向（正负角度合计 12 条方向线）。iPhone 18 Pro Max 两类测量来自同一台 GH3 面板手机。
 
 ## 本地运行
 
@@ -57,7 +57,7 @@ npm run check
 
 ## 来源与许可
 
-- `phone-view-angle-sim`：`437ad1045d83a44088e451ddb4c31339d1a9c142`，来源见 `vendor/angle/SOURCE.json`。
+- `phone-view-angle-sim`：`a4934e489de3e0b46b98475548ca2bcdc1e43260`，来源见 `vendor/angle/SOURCE.json`。
 - `svm-full-range-visualizer`：`4189c501004904a494a35ae438dda761cff2be0c`，来源见 `vendor/svm/SOURCE.json` 与 `data/svm/source.json`。
 
 MIT，原项目许可原文随源码保留。

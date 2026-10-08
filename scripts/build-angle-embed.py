@@ -121,6 +121,6 @@ body[data-compare="true"] #atlasPadLabel0 {color:#9aaeff;}
 }
 </style><script>window.ATLAS_EMBED=true;</script></head>'''
 html = html.replace('</head>', css)
-html = html.replace('<script src="app.js?v=15"></script>', '<aside id="atlasControls" aria-label="原版观看方向"></aside><script src="embed-app.js?v=20261008-dual-pad"></script>')
+html = html.replace('<script src="app.js?v=15"></script>', '<aside id="atlasControls" aria-label="原版观看方向"></aside><script src="embed-app.js?v=20261008-mate90"></script>')
 assert 'id="atlasControls"' in html
 (root / 'embed.html').write_text(html)

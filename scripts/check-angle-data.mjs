@@ -7,10 +7,11 @@ const root=fileURLToPath(new URL('../',import.meta.url));
 const context={window:{}};
 for(const file of ['data.js','model.js'])vm.runInNewContext(fs.readFileSync(path.join(root,'vendor/angle',file),'utf8'),context);
 const data=context.window.ANG_DATA,{createModel,norm360}=context.window.AngleModel;
-assert.equal(data.profiles.length,4);
+assert.equal(data.profiles.length,5);
 assert.deepEqual(Array.from(data.profiles,p=>[p.id,p.device,p.privacy]),[
  ['p0','iPhone 18 Pro Max GH3',false],['p1','iPhone 18 Pro Max GH3',true],
  ['p2','小米 18 Pro Max',false],['p3','小米 18 Pro Max',true],
+ ['p4','华为 Mate 90 Pro Max 典藏版',false],
 ]);
 for(const profile of data.profiles){
  assert.deepEqual(Array.from(profile.sets,s=>s.phi),[0,30,60,90,120,150]);
@@ -24,5 +25,5 @@ for(const profile of data.profiles){
  assert.ok(model.buildLUT().data.every(Number.isFinite));
 }
 const source=JSON.parse(fs.readFileSync(path.join(root,'vendor/angle/measurement-sources.json')));
-assert.equal(source.files.length,24);
-console.log('Angle snapshot: four six-direction profiles, all 12 rays measured; optical samples and LUTs verified.');
+assert.equal(source.files.length,30);
+console.log('Angle snapshot: five six-direction profiles, all 12 rays measured; optical samples and LUTs verified.');
