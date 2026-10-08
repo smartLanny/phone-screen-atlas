@@ -13,7 +13,7 @@
     "Appended bridge.js controls original window.__svm.store via validated same-origin parent messages.",
     "Original top-view heatmap is the default; maxNits is fixed to 500; original axes/colorbar/contours stay enabled while numeric labels and redundant titles are disabled.",
     "In chart2d, the original Inspector2D gray slider and presets are mounted by the original expand button and exposed as a compact footer using CSS; no copied control or renderer change.",
-    "The shared assets/watermark.svg background pattern repeats in a reserved 28px outer band above the original stage; it never overlays the heatmap, curves or labels. Native slice changes notify the parent.",
+    "The shared assets/watermark.svg background mark appears once in a reserved 28px outer band above the original stage; it never overlays the heatmap, curves or labels. Native slice changes notify the parent.",
     "The bridge caches all original records after ready and exposes only the selected one or two records in the original store, avoiding hidden-record legend clutter.",
     "Before the deferred original module bootstraps, iframe-only indexedDB/localStorage bindings are replaced with unavailable/empty no-write bindings. Original autosave cannot persist selected-only records as bundled deletions; parent and original-tool storage are untouched."
   ],

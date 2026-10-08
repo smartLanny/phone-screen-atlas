@@ -22,7 +22,7 @@ html { color-scheme: dark; }
 body { overflow: hidden; background: #07090d; }
 [data-testid="main"] { min-width: 0; }
 
-/* A reserved outer band keeps the shared background pattern clear of the original canvas. */
+/* A reserved outer band keeps the single background mark clear of the original canvas. */
 [data-testid="stage-outer"] { top: 28px !important; }
 body::after {
   content: "";
@@ -32,7 +32,7 @@ body::after {
   left: 0;
   height: 28px;
   z-index: 40;
-  background: #07090d url('../../assets/watermark.svg') repeat 0 -96px / 400px 240px;
+  background: #07090d url('../../assets/watermark.svg') no-repeat right -100px top -96px / 400px 240px;
   pointer-events: none;
   user-select: none;
 }

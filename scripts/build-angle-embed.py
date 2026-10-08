@@ -87,7 +87,7 @@ html = html.replace('<div class="pad-wrap">', '<div class="pad-wrap" id="atlasPa
 html = html.replace('<div class="pad-side">', '<div class="pad-wrap atlas-second" id="atlasPadCard1"><h3 class="atlas-pad-label" id="atlasPadLabel1"></h3><canvas id="atlasPad1"></canvas><div class="pad-read" id="atlasPadRead1"></div></div><div class="pad-side">', 1)
 css = '''<style>
 html {background:#101319 !important;}
-body {background:url(../../assets/watermark.svg) repeat,radial-gradient(ellipse at 35% 45%,#1d222c 0%,#101319 70%) !important;}
+body {background:url(../../assets/watermark.svg) no-repeat left 20px bottom -102px / 400px 240px,radial-gradient(ellipse at 35% 45%,#1d222c 0%,#101319 70%) !important;}
 body > *:not(#gl):not(#atlasControls):not(script):not(style) {display:none !important;}
 #gl {outline:none;}
 #atlasControls {position:absolute;right:0;top:0;bottom:0;width:320px;z-index:2;background:#11151c;border-left:1px solid #272d39;overflow:auto;}
@@ -107,9 +107,11 @@ body[data-compare="true"] #atlasPadLabel0 {color:#9aaeff;}
 #atlasControls .mini-select {font-size:10px;}
 #atlasControls .angle-row .chips button {font-size:10px;padding:5px 7px;}
 @media(min-width:701px) and (max-width:1100px){
+ body[data-compare="true"] {background-position:0 222px,center !important;}
  body[data-compare="true"] #atlasControls {left:0;right:0;top:360px;width:auto;border-left:0;border-top:1px solid #272d39;}
 }
 @media(max-width:700px){
+ body {background-position:0 222px,center !important;}
  #atlasControls {left:0;right:0;top:360px;bottom:0;width:auto;border-left:0;border-top:1px solid #272d39;}
  #atlasControls #secPad {padding:16px 18px;max-width:380px;margin:auto;}
  #atlasControls #pad {max-width:270px;}
