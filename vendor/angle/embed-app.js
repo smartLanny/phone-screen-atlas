@@ -177,8 +177,8 @@
     if (window.ATLAS_EMBED) {
       const controls = $('atlasControls').getBoundingClientRect();
       return controls.top > 0
-        ? {x0:8, x1:canvas.clientWidth-8, top:12, bottom:controls.top-48}
-        : {x0:8, x1:controls.left-12, top:12, bottom:canvas.clientHeight-48};
+        ? {x0:8, x1:canvas.clientWidth-8, top:42, bottom:controls.top-30}
+        : {x0:8, x1:controls.left-12, top:42, bottom:canvas.clientHeight-30};
     }
     const W = canvas.clientWidth, H = canvas.clientHeight, L = document.body.dataset.layout;
     const rc = (id) => $(id).getBoundingClientRect();
@@ -207,7 +207,7 @@
     const sides = S.stereo ? (S.cross ? [1, -1] : [-1, 1]) : devs.map(() => 0);
     const gap = S.stereo ? S.gap : 0;
     const colMax = S.stereo ? (areaW - gap) / 2 : areaW / n;
-    const halfW = colMax / 2 - (S.stereo ? 10 : 16), halfH = avail / 2;
+    const halfW = colMax / 2 - (S.stereo ? 10 : (window.ATLAS_EMBED ? 8 : 16)), halfH = avail / 2;
     const D = S.dist;
     const span = (mat) => {
       let mx = 0, my = 0;
@@ -240,7 +240,7 @@
         fEnv = Math.min(fEnv, extent(m));
       }
     }
-    let f = Math.max(fEnv, extent(flat) * 0.75);
+    let f = window.ATLAS_EMBED ? Math.min(extent(flat), extent(modelMatrix())) : Math.max(fEnv, extent(flat) * 0.75);
     // 双眼立体：两幅图按全部偏转姿态的投影包络定宽，并排且中间只留 S.gap，
     // 任何角度都不裁切手机，拖动时框也不缩放
     let colW = colMax;
@@ -251,7 +251,7 @@
     const centers = S.stereo
       ? [areaX0 + areaW / 2 - (colW + gap) / 2, areaX0 + areaW / 2 + (colW + gap) / 2]
       : devs.map((_, i) => areaX0 + (i + 0.5) * colW);
-    const envH = myE * f;
+    const envH = (window.ATLAS_EMBED ? span(modelMatrix())[1] : myE) * f;
     const cy = top + halfH;
     const bottomY = Math.min(top + 2 * halfH, cy + envH + 8);
     const frameTop = S.stereo ? Math.max(top - 10, cy - envH - 10) : top;
@@ -292,14 +292,17 @@
   in vec3 aPos;
   in vec3 aNor;
   in float aMat;
+  in vec2 aUv;
   out vec3 vN;
   out vec3 vW;
+  out vec2 vUv;
   flat out int vMat;
   ${COMMON_VS}
   void main() {
     vW = uModel * aPos;
     vN = uModel * aNor;
     vMat = int(aMat + 0.5);
+    vUv = aUv;
     gl_Position = project(vW);
   }`;
 
@@ -307,11 +310,14 @@
   precision highp float;
   in vec3 vN;
   in vec3 vW;
+  in vec2 vUv;
   flat in int vMat;
   out vec4 outColor;
   uniform vec3 uEye;
   uniform vec3 uFrame, uBack;
   uniform float uRough;
+  uniform sampler2D uBackTex;
+  uniform bool uUseBackTex;
   ${COLOR_GLSL}
 
   // 摄影棚：上方大柔光箱 + 右侧灯条 + 左侧轮廓光，外加上亮下暗的环境渐变。
@@ -358,7 +364,12 @@
     vec3 R = reflect(-V, N);
     float nv = clamp(dot(N, V), 0.0, 1.0);
     vec3 col;
-    if (vMat == 0 || vMat == 3 || vMat == 1) {
+    if (uUseBackTex && (vMat == 1 || vMat == 2)) {
+      vec4 photo = texture(uBackTex, vUv);
+      vec3 base = srgb2lin(photo.rgb) * (0.92 + 0.08 * max(dot(N, normalize(vec3(-0.2, 0.7, 0.6))), 0.0));
+      col = mix(uBack * 0.4, base, photo.a);
+      col += vec3(0.025) * pow(1.0 - nv, 5.0);
+    } else if (vMat == 0 || vMat == 3 || vMat == 1) {
       // 喷砂阳极氧化铝: 金属高光带本色、粗糙度高；氧化层染色带一点漫反射。
       // 背板为同色磨砂玻璃: 非金属，漫反射为主，高光弱而宽。
       bool metal = vMat != 1;
@@ -408,6 +419,7 @@
   uniform vec3 uEye;
   uniform vec2 uScreenHalf, uDispMM, uImgScale;
   uniform vec3 uCut;
+  uniform vec3 uHole0, uHole1, uHole2;
   uniform float uCorner, uRot;
   uniform int uMode;
   uniform sampler2D uPal;   // 256×1 色表（热力图配色，与方向盘一致）
@@ -442,6 +454,11 @@
     return length(max(q, 0.0)) + min(max(q.x, q.y), 0.0) - r;
   }
 
+  float aperture(vec2 p, vec3 hole, float px) {
+    if (hole.z <= 0.0) return 0.0;
+    return 1.0 - smoothstep(hole.z - px, hole.z + px, length(p - hole.xy));
+  }
+
   void main() {
     vec2 pp = vLocal;
     float px = length(fwidth(pp));
@@ -474,7 +491,12 @@
     }
     vec2 q = pp - vec2(0.0, uScreenHalf.y - uCut.x);
     q.x = max(abs(q.x) - uCut.y, 0.0);
-    scr *= smoothstep(uCut.z, uCut.z + px, length(q));
+    if (uCut.z > 0.0) scr *= smoothstep(uCut.z, uCut.z + px, length(q));
+    float h0 = aperture(pp, uHole0, px), h1 = aperture(pp, uHole1, px), h2 = aperture(pp, uHole2, px);
+    scr = mix(scr, vec3(0.001, 0.002, 0.005), max(max(h0, h1), h2));
+    float glint0 = 1.0 - smoothstep(0.08, 0.3, length(pp - uHole0.xy));
+    float glint2 = 1.0 - smoothstep(0.08, 0.3, length(pp - uHole2.xy));
+    scr += vec3(0.003, 0.009, 0.024) * (h0 * glint0 + h2 * glint2);
 
     outColor = vec4(mix(vec3(0.004), scr, screen), 1.0);
   }`;
@@ -515,7 +537,7 @@
       gl.vertexAttribPointer(loc, size, gl.FLOAT, false, 0, 0);
     };
     attr('aPos', mesh.pos, 3);
-    if (withNormals) { attr('aNor', mesh.nor, 3); attr('aMat', mesh.mat, 1); }
+    if (withNormals) { attr('aNor', mesh.nor, 3); attr('aMat', mesh.mat, 1); attr('aUv', mesh.uv, 2); }
     const ib = gl.createBuffer();
     gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib);
     gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(mesh.idx), gl.STATIC_DRAW);
@@ -525,6 +547,15 @@
   gl.useProgram(screenProg.p);
   gl.uniform1i(screenProg.u.uImg, 0);
   gl.uniform1i(screenProg.u.uLut, 1);
+
+  gl.useProgram(bodyProg.p);
+  gl.uniform1i(bodyProg.u.uBackTex, 3);
+  gl.activeTexture(gl.TEXTURE3);
+  gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, new Uint8Array([0, 0, 0, 255]));
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.useProgram(screenProg.p);
 
   const lutTex = {};
   function bindLUT(id) {
@@ -539,6 +570,38 @@
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
     lutTex[id] = { tex, width: lut.width };
     return lut.width;
+  }
+
+  const backTextures = new Map();
+  function bindBackTexture(path) {
+    let entry = backTextures.get(path);
+    if (!entry) {
+      const tex = gl.createTexture();
+      entry = { tex, ready: false };
+      backTextures.set(path, entry);
+      const img = new Image();
+      img.onload = () => {
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+        gl.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA8, gl.RGBA, gl.UNSIGNED_BYTE, img);
+        gl.generateMipmap(gl.TEXTURE_2D);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        entry.ready = true;
+        requestRender();
+      };
+      img.src = path;
+    }
+    if (entry.ready) {
+      gl.activeTexture(gl.TEXTURE3);
+      gl.bindTexture(gl.TEXTURE_2D, entry.tex);
+    }
+    return entry.ready;
   }
 
   // 热力图色表放在纹理单元 2
@@ -616,11 +679,33 @@
     gl.uniform2f(prog.u.uDepth, k1, k2);
   }
 
+  function updateAtlasPhoneLabels(ids, M) {
+    const root = $('atlasPhoneLabels');
+    while (root.children.length < ids.length) {
+      const label = document.createElement('div');
+      label.className = 'atlas-phone-label';
+      root.appendChild(label);
+    }
+    while (root.children.length > ids.length) root.lastElementChild.remove();
+    ids.forEach((id, i) => {
+      const profile = byId(id), view = views[i], label = root.children[i];
+      const mode = profile.privacy ? (profile.privacyKind === 'film' ? '贴防窥膜' : '防窥开启') : '默认';
+      label.dataset.slot = String(i);
+      label.textContent = `${profile.device.replace(' GH3', '')} · ${mode}`;
+      label.style.left = `${view.cx}px`;
+      const top = Math.min(...view.dev.corners.map(c => {
+        const w = apply(M, c);
+        return view.cy - view.f * w[1] / (view.D - w[2]);
+      }));
+      label.style.top = `${Math.max(label.getBoundingClientRect().height + 8, top - 8)}px`;
+    });
+  }
   function render() {
     applyPalette();
     const M = modelMatrix();
     const ids = S.stereo ? [activeIds()[0], activeIds()[0]] : activeIds();
     computeViews(ids.map((id) => dev(byId(id).device)));
+    if (window.ATLAS_EMBED) updateAtlasPhoneLabels(ids, M);
     placeFrames();
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0, 0, 0, 0);
@@ -643,6 +728,8 @@
       gl.uniform3fv(bodyProg.u.uFrame, c.frame);
       gl.uniform3fv(bodyProg.u.uBack, c.back);
       gl.uniform1f(bodyProg.u.uRough, v.dev.spec.rough ?? 0.55);
+      const hasBackTexture = v.dev.spec.backTexture && bindBackTexture(v.dev.spec.backTexture);
+      gl.uniform1i(bodyProg.u.uUseBackTex, hasBackTexture ? 1 : 0);
       gl.bindVertexArray(v.dev.body.vao);
       setCommon(bodyProg, M, v);
       gl.drawElements(gl.TRIANGLES, v.dev.body.count, gl.UNSIGNED_INT, 0);
@@ -660,6 +747,11 @@
       gl.uniform2fv(screenProg.u.uScreenHalf, d.screenHalf);
       gl.uniform1f(screenProg.u.uCorner, d.spec.screen.corner);
       gl.uniform3f(screenProg.u.uCut, cut.y, cut.half, cut.r);
+      const holes = d.spec.screen.holes || [];
+      for (let h = 0; h < 3; h++) {
+        const hole = holes[h];
+        gl.uniform3f(screenProg.u[`uHole${h}`], hole ? hole[0] : 0, hole ? d.screenHalf[1] - hole[1] : 0, hole ? hole[2] : 0);
+      }
       gl.uniform2fv(screenProg.u.uDispMM, dispMM(d));
       gl.uniform2fv(screenProg.u.uImgScale, imgScale(d));
       gl.uniform1i(screenProg.u.uLutW, bindLUT(ids[i]));

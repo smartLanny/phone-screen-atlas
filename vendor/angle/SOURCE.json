@@ -1,6 +1,6 @@
 {
   "repository": "https://github.com/smartLanny/phone-view-angle-sim",
-  "commit": "a4934e489de3e0b46b98475548ca2bcdc1e43260",
+  "commit": "fe12e3f238f000e8865ef832fac7a8f8c578b9de",
   "files": [
     "index.html",
     "style.css",
@@ -11,7 +11,8 @@
     "devices.js",
     "phone3d.js",
     "viz.js",
-    "app.js"
+    "app.js",
+    "assets/huawei-mate90-pro-max-collector-back.png"
   ],
   "license": "MIT",
   "measurementManifest": "docs/measurement-sources.json",

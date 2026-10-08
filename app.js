@@ -20,7 +20,7 @@ const hasPrivacy=phone=>ANG_DATA.profiles.some(p=>p.device===phone.angleDevice&&
 const currentRecord=phone=>optionsFor(phone).find(r=>r.file===state.modes[phone.id])||optionsFor(phone)[0];
 const angleEntries=()=>selected().filter(({phone})=>phone.angleDevice).map(entry=>({...entry,profile:ANG_DATA.profiles.find(p=>p.device===entry.phone.angleDevice&&p.privacy===!!state.privacy[entry.phone.id])}));
 const privacyName=(phone,on)=>phone.id==='iphone-18-pro-max'?(on?'防窥膜':'默认'):(on?'防窥模式':'默认');
-const splitSvm=()=>narrow.matches&&svmEntries().length>1&&state.svmTab==='scene3d';
+const splitSvm=()=>!!state.compare;
 function readUrl(){
   Object.assign(state,defaults());const q=new URLSearchParams(location.search);
   if(PHONES.some(p=>p.id===q.get('phone')))state.phone=q.get('phone');
@@ -56,19 +56,23 @@ function renderSelection(){
   $('selection').classList.toggle('comparing',!!state.compare);
   $('selection').innerHTML=selected().map(({phone,slot},i)=>`${i?'<span class="vs">VS</span>':''}<div class="phone-select ${slot?'secondary':''}"><label class="select-label" for="phone-${slot}">${slot?'对比手机':'查看手机'}${phone.panel?`<span class="panel-label">${phone.panel}</span>`:''}</label><select id="phone-${slot}" data-phone="${slot}" aria-label="${slot?'对比手机':'查看手机'}">${PHONES.map(p=>`<option value="${p.id}" ${p.id===phone.id?'selected':''} ${p.id===(slot?state.phone:state.compare)?'disabled':''}>${esc(p.name)}</option>`).join('')}</select><div class="availability"><span class="${optionsFor(phone).length?'':'missing'}">${optionsFor(phone).length?'频闪':'频闪待补充'}</span><span class="${phone.angleDevice?'':'missing'}">${phone.angleDevice?'可视角':'可视角待测'}</span></div></div>`).join('')+(state.compare?'<button class="remove-compare" data-action="remove-compare" aria-label="移除对比手机">移除 ×</button>':'<button class="compare-button" data-action="add-compare">＋ 添加对比</button>');
 }
-function modeButtons(){return svmEntries().map(({phone,slot})=>`<div class="mode-buttons ${slot?'secondary':''}"><span class="mode-phone">${esc(phone.name)}</span><div class="segmented" aria-label="${esc(phone.name)}频闪模式">${optionsFor(phone).map(r=>`<button data-mode-phone="${phone.id}" data-mode-file="${r.file}" class="${r.file===currentRecord(phone).file?'active':''}" aria-pressed="${r.file===currentRecord(phone).file}">${esc(r.mode)}</button>`).join('')}</div></div>`).join('');}
-function privacyButtons(){return angleEntries().filter(({phone})=>hasPrivacy(phone)).map(({phone,slot})=>`<div class="mode-buttons ${slot?'secondary':''}"><span class="mode-phone">${esc(phone.name)}</span><div class="segmented" aria-label="${esc(phone.name)}防窥状态">${[false,true].map(on=>`<button data-privacy-phone="${phone.id}" data-privacy="${+on}" class="${!!state.privacy[phone.id]===on?'active':''}" aria-pressed="${!!state.privacy[phone.id]===on}">${privacyName(phone,on)}</button>`).join('')}</div></div>`).join('');}
+function svmModeButtons({phone,slot}){const options=optionsFor(phone);return options.length?`<div class="svm-mode-controls ${slot?'secondary':''}"><div class="segmented" aria-label="${esc(phone.name)}频闪模式">${options.map(r=>`<button data-mode-phone="${phone.id}" data-mode-file="${r.file}" class="${r.file===currentRecord(phone).file?'active':''}" aria-pressed="${r.file===currentRecord(phone).file}">${esc(r.mode)}</button>`).join('')}</div></div>`:'';}
+function privacyButtons(){const groups=angleEntries().filter(({phone})=>hasPrivacy(phone));return groups.map(({phone,slot})=>`<div class="angle-privacy ${slot?'secondary':''}">${groups.length>1?`<span class="privacy-phone">${esc(phone.name)}</span>`:''}<div class="segmented" aria-label="${esc(phone.name)}防窥状态">${[false,true].map(on=>`<button data-privacy-phone="${phone.id}" data-privacy="${+on}" class="${!!state.privacy[phone.id]===on?'active':''}" aria-pressed="${!!state.privacy[phone.id]===on}">${privacyName(phone,on)}</button>`).join('')}</div></div>`).join('');}
+function svmPanel({phone,slot}){
+  const recordsForPhone=optionsFor(phone);
+  return `<section class="svm-single ${slot?'secondary':''}"><div class="svm-panel-head"><h3>${esc(phone.name)}</h3>${svmModeButtons({phone,slot})}</div>${recordsForPhone.length?`<iframe data-svm-frame data-slot="${slot}" src="vendor/svm/embed.html?v=20261008-mate90" title="${esc(phone.name)} 原版 SVM 热力图"></iframe>`:'<div class="svm-missing">频闪数据待补充</div>'}</section>`;
+}
 function svmFrame(){
-  if(splitSvm())return `<div class="svm-frames split">${svmEntries().map(({phone,slot})=>`<section class="svm-single"><h3>${esc(phone.name)}</h3><iframe data-svm-frame data-slot="${slot}" src="vendor/svm/embed.html?v=20261008-mate90" title="${esc(phone.name)} 原版 SVM 热力图"></iframe></section>`).join('')}</div>`;
-  return '<div class="svm-frames"><iframe id="svmFrame" data-svm-frame data-slot="all" src="vendor/svm/embed.html?v=20261008-mate90" title="原版 SVM 可视化"></iframe></div>';
+  if(state.compare)return `<div class="svm-frames split">${selected().map(svmPanel).join('')}</div>`;
+  return `<div class="svm-frames single">${svmPanel(selected()[0])}</div>`;
 }
 function renderAngle(){
   const entries=angleEntries(),missing=selected().filter(e=>!e.phone.angleDevice);
-  return `<section class="section-block" id="viewing-angle" aria-labelledby="angleTitle"><div class="section-heading"><h2 id="angleTitle">可视角</h2><div class="heading-actions">${entries.length?`<div class="segmented" aria-label="屏幕内容"><button data-pattern="ui" class="${state.pattern==='ui'?'active':''}" aria-pressed="${state.pattern==='ui'}">浅色画面</button><button data-pattern="dark" class="${state.pattern==='dark'?'active':''}" aria-pressed="${state.pattern==='dark'}">深色画面</button></div><button class="text-button" data-action="angle-reset" title="回到正视">回正 ↺</button>`:''}</div></div>${entries.length?`<div class="section-modes">${privacyButtons()}</div>${missing.length?`<div class="missing-note">${missing.map(e=>esc(e.phone.name)).join('、')} · 可视角待测</div>`:''}<div class="angle-stage ${entries.length===2?'comparing':''}"><iframe id="angleFrame" src="vendor/angle/embed.html?v=20261008-mate90" title="原版可视角仿真与观看方向热力图"></iframe></div>`:'<div class="empty"><h3>暂无可视角数据</h3><button data-action="choose-angle-phone">查看已测机型</button></div>'}</section>`;
+  return `<section class="section-block" id="viewing-angle" aria-labelledby="angleTitle"><div class="section-heading angle-heading"><h2 id="angleTitle">可视角</h2><div class="heading-actions angle-toolbar">${entries.length?`<div class="segmented" aria-label="屏幕内容"><button data-pattern="ui" class="${state.pattern==='ui'?'active':''}" aria-pressed="${state.pattern==='ui'}">浅色画面</button><button data-pattern="dark" class="${state.pattern==='dark'?'active':''}" aria-pressed="${state.pattern==='dark'}">深色画面</button></div>${privacyButtons()}<button class="text-button" data-action="angle-reset" title="回到正视">回正 ↺</button>`:''}</div></div>${entries.length?`${missing.length?`<div class="missing-note">${missing.map(e=>esc(e.phone.name)).join('、')} · 可视角待测</div>`:''}<div class="angle-stage ${entries.length===2?'comparing':''}"><iframe id="angleFrame" src="vendor/angle/embed.html?v=20261008-mate90-appearance" title="原版可视角仿真与观看方向热力图"></iframe></div>`:'<div class="empty"><h3>暂无可视角数据</h3><button data-action="choose-angle-phone">查看已测机型</button></div>'}</section>`;
 }
 function renderFlicker(){
-  const entries=svmEntries(),missing=selected().filter(({phone})=>!optionsFor(phone).length);
-  return `<section class="section-block" id="flicker" aria-labelledby="flickerTitle"><div class="section-heading"><h2 id="flickerTitle">频闪</h2><div class="heading-actions">${entries.length?`<div class="segmented" aria-label="频闪视图">${[['top','热力图'],['perspective','立体'],['chart2d','二维曲线']].map(([view,label])=>`<button data-svm-view="${view}" class="${(view==='chart2d'?state.svmTab==='chart2d':state.svmTab==='scene3d'&&state.terrainView===view)?'active':''}" aria-pressed="${view==='chart2d'?state.svmTab==='chart2d':state.svmTab==='scene3d'&&state.terrainView===view}">${label}</button>`).join('')}</div><span class="quiet-label" title="固定显示≤500 nits部分">≤ 500 nits</span>`:''}</div></div>${entries.length?`<div class="section-modes">${modeButtons()}</div>${missing.length?`<div class="missing-note">${missing.map(({phone})=>esc(phone.name)).join('、')} · 频闪待补充</div>`:''}<div id="svmHost" class="svm-stage ${splitSvm()?'split-stage':''}">${svmFrame()}</div>`:'<div class="empty"><h3>暂无频闪数据</h3></div>'}</section>`;
+  const entries=svmEntries(),panels=state.compare?selected():entries;
+  return `<section class="section-block" id="flicker" aria-labelledby="flickerTitle"><div class="section-heading"><h2 id="flickerTitle">频闪</h2><div class="heading-actions">${entries.length?`<div class="segmented" aria-label="频闪视图">${[['top','热力图'],['perspective','立体'],['chart2d','二维曲线']].map(([view,label])=>`<button data-svm-view="${view}" class="${(view==='chart2d'?state.svmTab==='chart2d':state.svmTab==='scene3d'&&state.terrainView===view)?'active':''}" aria-pressed="${view==='chart2d'?state.svmTab==='chart2d':state.svmTab==='scene3d'&&state.terrainView===view}">${label}</button>`).join('')}</div><span class="quiet-label" title="固定显示≤500 nits部分">≤ 500 nits</span>`:''}</div></div>${panels.length?`<div id="svmHost" class="svm-stage ${splitSvm()?'split-stage':''}">${svmFrame()}</div>`:'<div class="empty"><h3>暂无频闪数据</h3></div>'}</section>`;
 }
 function wireSvmFrames(){document.querySelectorAll('[data-svm-frame]').forEach(frame=>frame.addEventListener('load',()=>sendSvmState(frame)));}
 function render(){
@@ -76,10 +80,11 @@ function render(){
   $('angleFrame')?.addEventListener('load',sendAngleState);wireSvmFrames();writeUrl();
 }
 function sendAngleState(){$('angleFrame')?.contentWindow?.postMessage({type:'atlas-angle-set',profiles:angleEntries().map(e=>e.profile.id),theta:state.theta,psi:state.psi,pattern:state.pattern,padMetric:state.padMetric,pal:state.pal},location.origin);}
-function sendSvmState(target){
+function sendSvmState(target,skipFrame){
   for(const frame of target?[target]:document.querySelectorAll('[data-svm-frame]')){
-    const phones=frame.dataset.slot==='all'?svmEntries():svmEntries().filter(e=>e.slot===+frame.dataset.slot);
-    frame.contentWindow?.postMessage({type:'atlas-svm-set',files:phones.map(({phone})=>currentRecord(phone).file),view:state.svmTab,terrainView:state.terrainView,sliceMode:'gray',sliceGray:state.sliceGray,layout:phones.length>1?'sideBySide':'single',denoise:true},location.origin);
+    if(frame===skipFrame)continue;
+    const phones=svmEntries().filter(e=>e.slot===+frame.dataset.slot);
+    frame.contentWindow?.postMessage({type:'atlas-svm-set',files:phones.map(({phone})=>currentRecord(phone).file),view:state.svmTab,terrainView:state.terrainView,sliceMode:'gray',sliceGray:state.sliceGray,layout:'single',denoise:true},location.origin);
   }
 }
 function updateButtons(selector,key,value){document.querySelectorAll(selector).forEach(b=>{const on=b.dataset[key]===String(value);b.classList.toggle('active',on);b.setAttribute('aria-pressed',on);});}
@@ -96,9 +101,9 @@ document.addEventListener('click',async event=>{
   else if(b.dataset.modeFile){state.modes[b.dataset.modePhone]=b.dataset.modeFile;updateButtons(`[data-mode-phone="${b.dataset.modePhone}"]`,'modeFile',b.dataset.modeFile);sendSvmState();writeUrl();}
   else if(b.dataset.privacyPhone){state.privacy[b.dataset.privacyPhone]=b.dataset.privacy==='1';updateButtons(`[data-privacy-phone="${b.dataset.privacyPhone}"]`,'privacy',b.dataset.privacy);sendAngleState();writeUrl();}
   else if(b.dataset.svmView){
-    const wasSplit=splitSvm();state.svmTab=b.dataset.svmView==='chart2d'?'chart2d':'scene3d';if(state.svmTab==='scene3d')state.terrainView=b.dataset.svmView;
+    state.svmTab=b.dataset.svmView==='chart2d'?'chart2d':'scene3d';if(state.svmTab==='scene3d')state.terrainView=b.dataset.svmView;
     document.querySelectorAll('[data-svm-view]').forEach(button=>{const active=button.dataset.svmView===(state.svmTab==='chart2d'?'chart2d':state.terrainView);button.classList.toggle('active',active);button.setAttribute('aria-pressed',active);});
-    if(wasSplit!==splitSvm()){$('svmHost').classList.toggle('split-stage',splitSvm());$('svmHost').innerHTML=svmFrame();wireSvmFrames();}else sendSvmState();writeUrl();
+    sendSvmState();writeUrl();
   }
   else if(b.dataset.pattern){state.pattern=b.dataset.pattern;updateButtons('[data-pattern]','pattern',state.pattern);sendAngleState();writeUrl();}
 });
@@ -116,7 +121,7 @@ window.addEventListener('message',event=>{
   }
   const frame=[...document.querySelectorAll('[data-svm-frame]')].find(f=>f.contentWindow===event.source);
   if(frame&&event.data?.type==='atlas-svm-ready')sendSvmState(frame);
-  if(frame&&event.data?.type==='atlas-svm-change'&&Number.isFinite(event.data.sliceGray)){state.sliceGray=Math.min(255,Math.max(0,event.data.sliceGray));clearTimeout(urlTimer);urlTimer=setTimeout(writeUrl,250);}
+  if(frame&&event.data?.type==='atlas-svm-change'&&Number.isFinite(event.data.sliceGray)){state.sliceGray=Math.min(255,Math.max(0,event.data.sliceGray));sendSvmState(null,frame);clearTimeout(urlTimer);urlTimer=setTimeout(writeUrl,250);}
 });
 window.addEventListener('popstate',()=>{readUrl();render();});
 narrow.addEventListener('change',()=>{if(records.length)render();});
