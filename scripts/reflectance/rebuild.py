@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Copy and digitize the source reflectance plots without inventing raw readings."""
+"""Rebuild reflectance from audited PNG evidence and reviewed original phone spectra."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
+from raw_ingest import apply_index
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -291,7 +292,7 @@ def build_index(spec: dict, manifest: dict) -> dict:
             "conditions": conditions,
         })
 
-    return {
+    return apply_index({
         "schemaVersion": 1,
         "units": spec["units"],
         "wavelengthRangeNm": spec["axes"]["wavelengthNm"],
@@ -301,10 +302,14 @@ def build_index(spec: dict, manifest: dict) -> dict:
         "sourceManifest": "source-manifest.json",
         "phones": ordered_phones,
         "sourcePlotBounds": source_bounds,
-    }
+    })
 
 
 def verify(spec: dict, manifest: dict, index: dict):
+    if manifest.get("rawSource"):
+        raw = manifest["rawSource"]
+        if sha256(DATA / raw["exportFile"]) != raw["exportSha256"]:
+            raise ValueError("手机原始数字导出哈希不一致。")
     if manifest["sourceRootLabel"] != spec["sourceRootLabel"]:
         raise ValueError("来源根目录标签与 source-spec 不符。")
     manifest_ids = {entry["id"] for entry in manifest["sources"]}
@@ -343,6 +348,10 @@ def main() -> int:
     spec = read_json(SPEC_PATH)
     if args.action == "ingest":
         manifest = ingest(args.source_root, spec)
+        if MANIFEST_PATH.exists():
+            prior_manifest = read_json(MANIFEST_PATH)
+            if prior_manifest.get("rawSource"):
+                manifest["rawSource"] = prior_manifest["rawSource"]
         index = build_index(spec, manifest)
         write_json(MANIFEST_PATH, manifest)
         write_json(INDEX_PATH, index)
@@ -357,7 +366,7 @@ def main() -> int:
         return 0
     verify(spec, manifest, read_json(INDEX_PATH))
     print(f"来源副本、哈希、轴单位、曲线顺序与离线重建：PASS（{len(index['phones'])} 部设备）")
-    print(f"数字化精度口径：±{spec['axes']['traceErrorNm']} nm，±{spec['axes']['traceErrorPercentagePoints']:.2f} 个百分点；网格步长 {spec['axes']['sampleStepNm']} nm，不代表仪器采样间隔。")
+    print("PNG 核对源保留提取误差；instrument-xml 曲线使用原始采样网格，不声明仪器精度。")
     return 0
 
 

@@ -8,11 +8,11 @@ import { spawnSync } from 'node:child_process';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const dir = path.join(root, 'vendor/svm');
 const original = await fs.readFile(path.join(dir, 'original.html'));
-const originalSha256 = 'ca7291083c7e9e02c93f689473b2792b87223e9bbee5ce40302602b73cc0d90d';
+const originalSha256 = '203687d157558338f50317f730bc6536bb33f6824de5e6513db5bbc38a6d1db1';
 assert.equal(crypto.createHash('sha256').update(original).digest('hex'), originalSha256, 'Pinned original.html bytes changed');
 const manifest = JSON.parse(await fs.readFile(path.join(root, 'data/svm/manifest.original.json'), 'utf8'));
 const files = manifest.map(entry => entry.file);
-assert.equal(files.length, 16);
+assert.equal(files.length, 17);
 const replacements = {
   'settings.v2': 1, 'prefs.v2': 1, 'userRecords.v2': 1, 'bundledEdits.v2': 1, 'removedBundled.v2': 1,
   'svm.persist.pending.v1': 1, 'svm.stats.ui': 1, 'svm-export-prefs.v1': 1, 'svm.shell.ui.v1': 2,

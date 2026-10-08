@@ -6,7 +6,7 @@
 <meta name="color-scheme" content="dark">
 <title>手机屏幕反射率</title>
 <link rel="icon" href="data:,">
-<link rel="stylesheet" href="style.css?v=20261008-reflectance-height-fix-1">
+<link rel="stylesheet" href="style.css?v=20261008-reflectance-viewer-2">
 </head>
 <body>
 <main id="app" aria-label="手机屏幕反射率">
@@ -35,10 +35,10 @@
     <button id="closeInfo" class="close-button" type="button" aria-label="关闭">×</button>
   </div>
   <div class="dialog-body">
-    <p class="method-note">曲线由原始反射率图数字化提取，提取估计误差约 ±1 nm、±0.05 个百分点。2 nm 网格用于曲线展示，不代表仪器采样间隔。</p>
+    <p class="method-note">曲线来自仪器原始光谱，按 10 nm 采样点连线。全反射使用 SCI，漫反射使用 SCE；悬浮或点按查看原始采样值。</p>
     <div id="curveDetails"></div>
   </div>
 </dialog>
-<script type="module" src="app.js?v=20261008-reflectance-height-fix-1"></script>
+<script type="module" src="app.js?v=20261008-reflectance-viewer-2"></script>
 </body>
 </html>

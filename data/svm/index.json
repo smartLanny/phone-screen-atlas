@@ -24,6 +24,7 @@
       "columns": 18,
       "originalDataPoints": 432,
       "storedExcludedPoints": 0,
+      "displayedDataPoints": 298,
       "sourceSha256": "1695d3f9a796ef037ab288386f04b5911eb5013c8b064396f03c63f1bc213a89"
     },
     {
@@ -43,6 +44,7 @@
       "columns": 18,
       "originalDataPoints": 432,
       "storedExcludedPoints": 0,
+      "displayedDataPoints": 294,
       "sourceSha256": "2d14fc71abdcccf2ee8ef023024dd3d0d3fafbf65802d31975d79e57a417da4e"
     },
     {
@@ -63,6 +65,7 @@
       "columns": 18,
       "originalDataPoints": 324,
       "storedExcludedPoints": 0,
+      "displayedDataPoints": 303,
       "sourceSha256": "8dd96914e6e7b0fa81c66cd8a02cd1420f578c1e67ef0b6466938d477c1cad33"
     },
     {
@@ -83,6 +86,7 @@
       "columns": 18,
       "originalDataPoints": 324,
       "storedExcludedPoints": 0,
+      "displayedDataPoints": 303,
       "sourceSha256": "87689ee657b8d017c4c2fc8544130c344a6446fbe527d45a060062ac0163ddb7"
     },
     {
@@ -103,6 +107,7 @@
       "columns": 18,
       "originalDataPoints": 432,
       "storedExcludedPoints": 0,
+      "displayedDataPoints": 340,
       "sourceSha256": "b6245e0ea4a2bae17859dac1272c9f6651c75f721bdf663ce1b8dccc587ad997"
     },
     {
@@ -123,6 +128,7 @@
       "columns": 18,
       "originalDataPoints": 432,
       "storedExcludedPoints": 0,
+      "displayedDataPoints": 344,
       "sourceSha256": "7c49dfb0c25a336296dd3886eda13958146266ae3c73984c273c33596a0aa4d4"
     },
     {
@@ -143,6 +149,7 @@
       "columns": 18,
       "originalDataPoints": 432,
       "storedExcludedPoints": 0,
+      "displayedDataPoints": 336,
       "sourceSha256": "e5e30b4b3ffb2d65690f02f1c1fc749cebd6c9e46b9a98d9d4bfd08621fa1a21"
     },
     {
@@ -163,6 +170,7 @@
       "columns": 18,
       "originalDataPoints": 432,
       "storedExcludedPoints": 0,
+      "displayedDataPoints": 341,
       "sourceSha256": "60a3a2a46669faf17d542de6d159314900a1af89f27ff0ee25aab44fe33e487c"
     },
     {
@@ -183,6 +191,7 @@
       "columns": 18,
       "originalDataPoints": 432,
       "storedExcludedPoints": 0,
+      "displayedDataPoints": 322,
       "sourceSha256": "d51ae2de1059006a8fe958202893f26bb17e8a8d0657efcf76d1404b0aba2106"
     },
     {
@@ -203,6 +212,7 @@
       "columns": 18,
       "originalDataPoints": 432,
       "storedExcludedPoints": 0,
+      "displayedDataPoints": 320,
       "sourceSha256": "d7f27bada5d3abaf08d4a53de4dd7a88e3809086a60412e68b6df617e0dcde30"
     },
     {
@@ -223,6 +233,7 @@
       "columns": 18,
       "originalDataPoints": 432,
       "storedExcludedPoints": 0,
+      "displayedDataPoints": 306,
       "sourceSha256": "fe8ed434fbb7721fdaa0e09e20c20e7c298b176376dcf8f30b7c9145d33bc61f"
     },
     {
@@ -243,6 +254,7 @@
       "columns": 18,
       "originalDataPoints": 432,
       "storedExcludedPoints": 0,
+      "displayedDataPoints": 320,
       "sourceSha256": "42f48ba064e0761434f4b5187c49a69b73d4d79ecea7e54b47f02850cffc0565"
     },
     {
@@ -263,6 +275,7 @@
       "columns": 18,
       "originalDataPoints": 432,
       "storedExcludedPoints": 0,
+      "displayedDataPoints": 360,
       "sourceSha256": "3a8ee6092168f6a8cbecfbdd7b9456ef64db643ee6e119dcb1a4eaff61fa4a02"
     },
     {
@@ -283,6 +296,7 @@
       "columns": 18,
       "originalDataPoints": 432,
       "storedExcludedPoints": 0,
+      "displayedDataPoints": 365,
       "sourceSha256": "5e628577682fb8c98a8bac96103a454f4c87518104e1e9712c0a7a4f96dc7ede"
     },
     {
@@ -302,6 +316,7 @@
       "columns": 18,
       "originalDataPoints": 310,
       "storedExcludedPoints": 122,
+      "displayedDataPoints": 296,
       "sourceSha256": "48f8dd37ba0e1d07d8879841a9ef6ea058fa339b22c9be44dbf88b703c82b957"
     },
     {
@@ -321,7 +336,28 @@
       "columns": 18,
       "originalDataPoints": 327,
       "storedExcludedPoints": 105,
+      "displayedDataPoints": 294,
       "sourceSha256": "c1ca7f37031aaf8fab4face16d6b3135d1b1cde5ee6ac1b009cb2cfc65b4bd0b"
+    },
+    {
+      "file": "huawei_mate90promax.json",
+      "device": "华为 Mate 90 Pro Max 典藏版",
+      "mode": "默认",
+      "modeEn": "Default",
+      "id": "huawei_mate90promax_20261008",
+      "rawFile": "raw/huawei_mate90promax.json",
+      "processedFile": "processed/huawei_mate90promax.json",
+      "grayKeys": [
+        "34",
+        "124",
+        "255"
+      ],
+      "rows": 24,
+      "columns": 18,
+      "originalDataPoints": 72,
+      "storedExcludedPoints": 0,
+      "displayedDataPoints": 0,
+      "sourceSha256": "dd57a32624a02974379cb0f9eb6424d64c39f5960edc677d048a715609ed70e5"
     }
   ]
 }

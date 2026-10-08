@@ -1,4 +1,4 @@
-const DATA_URL='../../data/reflectance/index.json';
+const DATA_URL='../../data/reflectance/index.json?v=20261008-xml';
 const PHONE_COLORS=['#86a2ff','#f0aa70'];
 const $=id=>document.getElementById(id);
 const esc=value=>String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
@@ -13,7 +13,7 @@ function sendParent(message){
 function findPhone(id){return indexData?.phones.find(phone=>phone.id===id)||null;}
 function conditionLabel(condition){
   if(!condition)return '测量状态未记录';
-  if(condition.id==='as-measured')return '默认';
+  if(condition.id==='as-measured')return '原始样品';
   if(condition.label&&condition.label!=='原图状态')return condition.label;
   return ({'screen-protector':'贴膜','inner-display':'内屏','outer-display':'外屏'}[condition.id]||condition.id);
 }
@@ -38,7 +38,7 @@ function normalizeSet(payload){
   let didFallback=false;
   for(const id of uniquePhones){
     const record=findPhone(id);
-    const preferred=Object.hasOwn(incomingConditions,id)?incomingConditions[id]:state.conditions[id];
+    const preferred=incomingConditions[id];
     const matched=record?.conditions.find(condition=>condition.id===preferred);
     const fallback=defaultCondition(record);
     if(matched)conditions[id]=matched.id;
@@ -77,7 +77,7 @@ function curveSegments(curve){
     const flush=()=>{if(segment.length)segments.push(segment);segment=[];};
     for(const sample of samples){
       if(sample[0]<span[0]||sample[0]>span[1])continue;
-      if(segment.length&&sample[0]-segment.at(-1)[0]>2.01)flush();
+      if(segment.length&&sample[0]-segment.at(-1)[0]>curve.sampleStepNm+0.01)flush();
       segment.push(sample);
     }
     flush();
@@ -172,7 +172,7 @@ function valueAt(curve,nm){
   for(const sample of samples){
     if(sample[0]===nm)return sample[1];
     if(sample[0]>nm){
-      if(!before||sample[0]-before[0]>2.01)return null;
+      if(!before||sample[0]-before[0]>curve.sampleStepNm+0.01)return null;
       const ratio=(nm-before[0])/(sample[0]-before[0]);
       return before[1]+(sample[1]-before[1])*ratio;
     }
@@ -182,7 +182,8 @@ function valueAt(curve,nm){
 }
 function updateReadout(nm,pinned=false){
   const bounded=Math.max(indexData.wavelengthRangeNm[0],Math.min(indexData.wavelengthRangeNm[1],nm));
-  const wavelength=Math.round(bounded);
+  const step=selectedPhones().map(curveFor).find(Boolean)?.sampleStepNm||10;
+  const wavelength=Math.round(bounded/step)*step;
   const crosshair=$('chart').querySelector('#crosshair');
   const dots=$('chart').querySelector('#focusDots');
   if(!crosshair||!dots||!chartBounds)return;
@@ -226,12 +227,10 @@ function renderDetails(){
   const rows=selectedPhones().map(selection=>{
     const condition=conditionFor(selection.id),curve=curveFor(selection);
     if(!selection.record)return `<section class="curve-detail"><h3>${esc(selection.name)}</h3><p>当前没有反射率测量数据。</p></section>`;
-    if(!curve)return `<section class="curve-detail"><h3>${esc(selection.name)} · ${esc(conditionLabel(condition))} · ${state.kind==='total'?'全反射':'漫反射'}</h3><p>原始图中没有这一状态和类型的曲线。</p></section>`;
+    if(!curve)return `<section class="curve-detail"><h3>${esc(selection.name)} · ${esc(conditionLabel(condition))} · ${state.kind==='total'?'全反射':'漫反射'}</h3><p>没有这一状态和类型的测量数据。</p></section>`;
     const sourcePath=typeof curve.sourceFile==='string'?`../../data/reflectance/${curve.sourceFile}`:'';
-    const method=curve.method?`原图标注口径：${esc(curve.method)}。`:'原图未标注 SCI/SCE。';
-    const legend=Number.isFinite(curve.legendLabelPercent)?`<p>原图图例值：${curve.legendLabelPercent}% <span class="detail-muted">（保留原图标注，不作为曲线算术平均值）</span></p>`:'';
-    const source=sourcePath?`<a class="source-link" href="${esc(sourcePath)}" target="_blank" rel="noopener">查看来源原图</a>`:'';
-    return `<section class="curve-detail"><h3>${esc(selection.name)} · ${esc(conditionLabel(condition))} · ${state.kind==='total'?'全反射':'漫反射'}</h3><p>${method}</p>${legend}<p class="detail-muted">曲线数字化提取估计误差：±${curve.traceErrorNm??indexData.digitization.traceErrorNm} nm、±${curve.traceErrorPercentagePoints??indexData.digitization.traceErrorPercentagePoints} 个百分点。2 nm 展示网格不代表仪器采样间隔。</p><p class="detail-muted">实际覆盖：${(curve.coverageSpansNm||[]).map(span=>`${span[0]}–${span[1]} nm`).join('、')||'未记录'}。</p>${source}</section>`;
+    const source=sourcePath?`<a class="source-link" href="${esc(sourcePath)}" target="_blank" rel="noopener">查看原始光谱数据</a>`:'';
+    return `<section class="curve-detail"><h3>${esc(selection.name)} · ${esc(condition.label||conditionLabel(condition))} · ${state.kind==='total'?'全反射':'漫反射'}</h3><p>仪器原始光谱 · ${esc(curve.method)} · ${curve.sampleStepNm} nm 采样。</p><p class="detail-muted">实际覆盖：${(curve.coverageSpansNm||[]).map(span=>`${span[0]}–${span[1]} nm`).join('、')||'未记录'}。悬浮或点按显示原始采样点。</p>${source}</section>`;
   });
   $('curveDetails').innerHTML=rows.join('');
 }
@@ -288,7 +287,7 @@ function bindEvents(){
     if(!['ArrowLeft','ArrowRight'].includes(event.key))return;
     event.preventDefault();
     const current=Number($('readoutText').querySelector('strong')?.textContent.match(/\d+/)?.[0]||550);
-    updateReadout(current+(event.key==='ArrowRight'?2:-2),true);
+    updateReadout(current+(event.key==='ArrowRight'?10:-10),true);
   });
   const observer=new ResizeObserver(entries=>{
     const rect=entries.at(-1)?.contentRect;

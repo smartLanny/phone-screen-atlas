@@ -14,13 +14,39 @@ const near = (a, b, at) => assert.ok(Number.isFinite(a) && Number.isFinite(b) &&
 const index = await read('index.json');
 const manifest = await read('manifest.original.json');
 const provenance = await read('source.json');
-assert.equal(index.records.length, 16);
+assert.equal(index.records.length, 17);
 assert.deepEqual(index.fixedGrayKeys, ['34', '124', '255']);
+assert.equal(provenance.commit, '48bf54c6d52a20179e5471d63e18717d8602c934');
+assert.deepEqual(provenance.dataImports, [{
+  provider: 'Feishu spreadsheet CSV export',
+  workbookTitle: '华为 Mate 90 Pro Max 典藏版 测试图表',
+  sheetTitle: '华为 Mate 90 Pro Max 典藏版 全灰阶 SVM',
+  sheetId: 'ZqTkQh',
+  exportRange: 'A1:AK54',
+  exportSha256: '2781b243035bf9280ccc3739ae92422f8b0704b69626491d6d11d9e9ef502c1f',
+  matrixRange: 'A4:AK27',
+  device: '华为 Mate 90 Pro Max 典藏版',
+  mode: '默认',
+  measuredCells: 72,
+  missingCells: 360,
+  zeroNitsCellsPreserved: 3,
+  cellNitsAtOrBelow500: 62,
+  g255HeaderNitsMeasured: [923.08, 714.9, 590.98],
+  displayedDataPointsAtMaxNits500: 0,
+  unusedTemplate: {
+    range: 'A28:AK54',
+    matrixRange: 'A31:AK54',
+    residualTitle: '华为 Mate 90 Pro Max 典藏版 屏幕低频闪',
+    comparedMatrixPairs: 432,
+    measuredCells: 0,
+    disposition: 'Unused blank template; user confirmed the phone has no separate low-flicker mode.',
+  },
+}]);
 for (const module of provenance.processing.sourceModules) {
   assert.equal(digest(await fs.readFile(path.join(here, 'source', path.basename(module.path)))), module.sha256);
 }
 const totals = { records: 0, matrixCells: 0, displayedCells: 0, restoredExcluded: 0, fixedSlicePoints: 0,
-  statuses: {}, estimatedLevels: 0, estimatedCellLuminances: 0, sliceEstimatedLevels: 0,
+  displayedDataPoints: 0, statuses: {}, estimatedLevels: 0, estimatedCellLuminances: 0, sliceEstimatedLevels: 0,
   sliceEstimatedCellLuminances: 0, sliceInterpolatedSvm: 0 };
 for (let i = 0; i < index.records.length; i++) {
   const entry = index.records[i];
@@ -35,6 +61,20 @@ for (let i = 0; i < index.records.length; i++) {
   const m = d.record.matrix;
   assert.deepEqual(m.rows, raw.matrix.rows);
   assert.deepEqual(m.cols, raw.matrix.cols);
+  const displayedDataPoints = m.grid.reduce((sum, row) => sum + row.reduce((count, point, c) => {
+    const nits = m.headerNits[c];
+    return Number.isFinite(nits) && nits >= 0 && nits <= 500 && point ? count + 1 : count;
+  }, 0), 0);
+  assert.equal(entry.displayedDataPoints, displayedDataPoints, `${entry.file}: displayedDataPoints`);
+  totals.displayedDataPoints += displayedDataPoints;
+  if (entry.file === 'huawei_mate90promax.json') {
+    assert.equal(entry.device, '华为 Mate 90 Pro Max 典藏版');
+    assert.equal(entry.mode, '默认');
+    assert.equal(entry.displayedDataPoints, 0, 'Mate 90 has no measured points under the G255 500 nits axis cap');
+    assert.equal(raw.data.length, 72);
+    assert.equal(raw.matrix.grid.flat().filter(Boolean).length, 72);
+    assert.equal(raw.matrix.grid.flat().filter(point => point === null).length, 360);
+  }
   const restored = raw.matrix.grid.map(row => [...row]);
   const excludedKeys = new Set();
   for (const p of raw.excluded ?? []) {

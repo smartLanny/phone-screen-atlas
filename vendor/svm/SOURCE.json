@@ -1,10 +1,10 @@
 {
   "repository": "https://github.com/smartLanny/svm-full-range-visualizer",
   "branch": "claude/brave-archimedes-bd546k",
-  "commit": "4189c501004904a494a35ae438dda761cff2be0c",
+  "commit": "48bf54c6d52a20179e5471d63e18717d8602c934",
   "sourcePath": "release/SVM-Visualizer.html",
-  "sourceUrl": "https://github.com/smartLanny/svm-full-range-visualizer/blob/4189c501004904a494a35ae438dda761cff2be0c/release/SVM-Visualizer.html",
-  "originalSha256": "ca7291083c7e9e02c93f689473b2792b87223e9bbee5ce40302602b73cc0d90d",
+  "sourceUrl": "https://github.com/smartLanny/svm-full-range-visualizer/blob/48bf54c6d52a20179e5471d63e18717d8602c934/release/SVM-Visualizer.html",
+  "originalSha256": "203687d157558338f50317f730bc6536bb33f6824de5e6513db5bbc38a6d1db1",
   "license": "MIT",
   "copyright": "Copyright (c) 2026 smartLanny and contributors",
   "modifications": [
@@ -24,8 +24,47 @@
     "All 11 localStorage occurrences and both indexedDB occurrences in the pinned release"
   ],
   "namespacedPersistenceLiterals": [
-    "settings.v2", "prefs.v2", "userRecords.v2", "bundledEdits.v2", "removedBundled.v2",
-    "svm.persist.pending.v1", "svm.stats.ui", "svm-export-prefs.v1", "svm.shell.ui.v1",
-    "svm-full-range-visualizer", "kv", "keyval-store", "keyval"
-  ]
+    "settings.v2",
+    "prefs.v2",
+    "userRecords.v2",
+    "bundledEdits.v2",
+    "removedBundled.v2",
+    "svm.persist.pending.v1",
+    "svm.stats.ui",
+    "svm-export-prefs.v1",
+    "svm.shell.ui.v1",
+    "svm-full-range-visualizer",
+    "kv",
+    "keyval-store",
+    "keyval"
+  ],
+  "originalRecordCount": 17,
+  "dataUpdate": {
+    "record": "huawei_mate90promax.json",
+    "device": "华为 Mate 90 Pro Max 典藏版",
+    "mode": "默认",
+    "sourceSheet": "华为 Mate 90 Pro Max 典藏版 全灰阶 SVM",
+    "sourceSheetId": "ZqTkQh",
+    "sourceRange": "A1:AK54",
+    "sourceSha256": "2781b243035bf9280ccc3739ae92422f8b0704b69626491d6d11d9e9ef502c1f",
+    "measuredCells": 72,
+    "missingCells": 360,
+    "unusedTemplateRange": "A31:AK54",
+    "unusedTemplateMeasurements": 0,
+    "cellNitsAtOrBelow500": 62,
+    "g255HeaderNitsMeasured": [
+      923.08,
+      714.9,
+      590.98
+    ],
+    "displayedDataPointsAtMaxNits500": 0,
+    "unusedTemplate": {
+      "range": "A28:AK54",
+      "matrixRange": "A31:AK54",
+      "residualTitle": "华为 Mate 90 Pro Max 典藏版 屏幕低频闪",
+      "comparedMatrixPairs": 432,
+      "measuredCells": 0,
+      "disposition": "Unused blank template; user confirmed the phone has no separate low-flicker mode."
+    }
+  }
 }

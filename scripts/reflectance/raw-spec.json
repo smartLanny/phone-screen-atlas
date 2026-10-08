@@ -1,0 +1,297 @@
+{
+  "schemaVersion": 1,
+  "excludedDeviceIds": [
+    "ipad-pro-11-m4"
+  ],
+  "samples": [
+    {
+      "recordTag": "Standard",
+      "recordId": "3",
+      "expectedName": "iPhone 15 Pro Max",
+      "phoneId": "iphone-15-pro-max",
+      "phoneName": "iPhone 15 Pro Max",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "19",
+      "expectedName": "小米 15",
+      "phoneId": "xiaomi-15",
+      "phoneName": "小米 15",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "20",
+      "expectedName": "荣耀 Magic7",
+      "phoneId": "honor-magic7",
+      "phoneName": "荣耀 Magic7",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "21",
+      "expectedName": "一加 13 Pro",
+      "phoneId": "oneplus-13-pro",
+      "phoneName": "一加 13 Pro",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "22",
+      "expectedName": "华为 Pura70",
+      "phoneId": "huawei-pura70",
+      "phoneName": "华为 Pura70",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "23",
+      "expectedName": "iQOO 13",
+      "phoneId": "iqoo-13",
+      "phoneName": "iQOO 13",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "24",
+      "expectedName": "iPhone 16 Pro Max",
+      "phoneId": "iphone-16-pro-max",
+      "phoneName": "iPhone 16 Pro Max",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "101",
+      "expectedName": "小米 MAX3",
+      "phoneId": "xiaomi-max3",
+      "phoneName": "小米 MAX3",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "115",
+      "expectedName": "小米 15 Ultra",
+      "phoneId": "xiaomi-15-ultra",
+      "phoneName": "小米 15 Ultra",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "139",
+      "expectedName": "OPPO Find N5",
+      "phoneId": "oppo-find-n5",
+      "phoneName": "OPPO Find N5",
+      "conditionId": "screen-unspecified-20250808",
+      "conditionLabel": "屏幕未注明 · 2025-08-08"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "277",
+      "expectedName": "OPPO Find N5 内屏",
+      "phoneId": "oppo-find-n5",
+      "phoneName": "OPPO Find N5",
+      "conditionId": "inner-display-20260228",
+      "conditionLabel": "内屏 · 2026-02-28"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "279",
+      "expectedName": "OPPO Find N5 外屏",
+      "phoneId": "oppo-find-n5",
+      "phoneName": "OPPO Find N5",
+      "conditionId": "outer-display-20260228",
+      "conditionLabel": "外屏 · 2026-02-28"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "281",
+      "expectedName": "OPPO Find N5 新 外屏",
+      "phoneId": "oppo-find-n5",
+      "phoneName": "OPPO Find N5",
+      "conditionId": "outer-display",
+      "conditionLabel": "新外屏 · 2026-03-01"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "282",
+      "expectedName": "OPPO Find N5 新 内屏",
+      "phoneId": "oppo-find-n5",
+      "phoneName": "OPPO Find N5",
+      "conditionId": "inner-display",
+      "conditionLabel": "新内屏 · 2026-03-01"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "185",
+      "expectedName": "iPhone 17 Pro Max",
+      "phoneId": "iphone-17-pro-max",
+      "phoneName": "iPhone 17 Pro Max",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "417",
+      "expectedName": "Apple iPhone 17 Pro Max 抗反膜",
+      "phoneId": "iphone-17-pro-max",
+      "phoneName": "iPhone 17 Pro Max",
+      "conditionId": "anti-reflective-film",
+      "conditionLabel": "抗反膜"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "194",
+      "expectedName": "一加 15",
+      "phoneId": "oneplus-15",
+      "phoneName": "一加 15",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "217",
+      "expectedName": "OPPO Find X9",
+      "phoneId": "oppo-find-x9",
+      "phoneName": "OPPO Find X9",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "239",
+      "expectedName": "华为 Mate Air",
+      "phoneId": "huawei-mate-70-air",
+      "phoneName": "华为 Mate 70 Air",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "245",
+      "expectedName": "华为 Mate 80 RS",
+      "phoneId": "huawei-mate-80-rs",
+      "phoneName": "华为 Mate 80 RS",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "251",
+      "expectedName": "小米 17Ultra徕卡",
+      "phoneId": "xiaomi-17-ultra",
+      "phoneName": "小米 17 Ultra 徕卡",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "265",
+      "expectedName": "iPhone Air 菲林AR膜",
+      "phoneId": "iphone-air",
+      "phoneName": "iPhone Air",
+      "conditionId": "anti-reflective-film",
+      "conditionLabel": "菲林 AR 膜"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "270",
+      "expectedName": "荣耀 Magic V5 外屏",
+      "phoneId": "honor-magic-v5",
+      "phoneName": "荣耀 Magic V5",
+      "conditionId": "outer-display",
+      "conditionLabel": "外屏"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "271",
+      "expectedName": "荣耀 Magic V5 内屏",
+      "phoneId": "honor-magic-v5",
+      "phoneName": "荣耀 Magic V5",
+      "conditionId": "inner-display",
+      "conditionLabel": "内屏"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "280",
+      "expectedName": "三星 S25 Ultra 带抗反膜",
+      "phoneId": "samsung-s25-ultra",
+      "phoneName": "三星 S25 Ultra",
+      "conditionId": "anti-reflective-film",
+      "conditionLabel": "带抗反膜"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "283",
+      "expectedName": "三星 S25 Ultra",
+      "phoneId": "samsung-s25-ultra",
+      "phoneName": "三星 S25 Ultra",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "320",
+      "expectedName": "OPPO Find X9 Ultra",
+      "phoneId": "oppo-find-x9-ultra",
+      "phoneName": "OPPO Find X9 Ultra",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "327",
+      "expectedName": "OPPO Find X9s Pro",
+      "phoneId": "oppo-find-x9s-pro",
+      "phoneName": "OPPO Find X9s Pro",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "414",
+      "expectedName": "Apple iPhone 18 Pro Max",
+      "phoneId": "iphone-18-pro-max",
+      "phoneName": "iPhone 18 Pro Max",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明",
+      "panel": "GH3"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "419",
+      "expectedName": "小米 18 Pro Max 贴膜",
+      "phoneId": "xiaomi-18-pro-max",
+      "phoneName": "小米 18 Pro Max",
+      "conditionId": "screen-protector",
+      "conditionLabel": "贴膜"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "420",
+      "expectedName": "小米 18 Pro Max",
+      "phoneId": "xiaomi-18-pro-max",
+      "phoneName": "小米 18 Pro Max",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    },
+    {
+      "recordTag": "Standard",
+      "recordId": "421",
+      "expectedName": "华为 Mate 90 Pro Max 典藏版",
+      "phoneId": "huawei-mate-90-pro-max",
+      "phoneName": "华为 Mate 90 Pro Max 典藏版",
+      "conditionId": "as-measured",
+      "conditionLabel": "原始样品 · 状态未注明"
+    }
+  ]
+}

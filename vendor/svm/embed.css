@@ -19,8 +19,11 @@ html, body, #root, [data-testid="shell"] {
   margin: 0;
 }
 html { color-scheme: dark; }
-body { overflow: hidden; background: #07090d; }
+body { overflow: hidden; background: #101113; }
 [data-testid="main"] { min-width: 0; }
+.bg-canvas { background-color: #101113 !important; }
+.bg-surface-1 { background-color: #101113 !important; }
+[data-testid="main"], [data-testid="stage-outer"], [data-testid="stage"] { background-color: #101113 !important; }
 
 /* A reserved outer band keeps the single background mark clear of the original canvas. */
 [data-testid="stage-outer"] { top: 28px !important; }
@@ -32,7 +35,7 @@ body::after {
   left: 0;
   height: 28px;
   z-index: 40;
-  background: #07090d url('../../assets/watermark.svg') no-repeat right -100px top -96px / 400px 240px;
+  background: #101113 url('../../assets/watermark.svg') no-repeat right -100px top -96px / 400px 240px;
   pointer-events: none;
   user-select: none;
 }
@@ -72,8 +75,58 @@ html[data-atlas-svm-view="chart2d"] [data-testid="inspector"] > div > div:not([d
   display: block !important;
   max-width: 640px;
   margin: 0 auto;
-  padding: 8px 16px !important;
+  padding: 2px 16px !important;
   border: 0 !important;
 }
 [data-testid="inspector-chart2d"] > section:has([data-atlas-gray-control]) > div:last-child { margin-top: 0 !important; }
 [data-atlas-gray-control] { display: flex !important; }
+[data-atlas-gray-control] {
+  flex-direction: column !important;
+  align-items: stretch !important;
+  gap: 3px !important;
+  color: #e8e9eb !important;
+  font-size: 14px !important;
+  line-height: 1.4;
+}
+[data-atlas-gray-control] :is(span, label) {
+  color: #d5d6d9 !important;
+  font-size: 14px !important;
+}
+[data-atlas-gray-control] button {
+  min-width: 42px;
+  min-height: 42px;
+  margin-block: -7px !important;
+  padding: 4px 10px !important;
+  border: 1px solid #303236 !important;
+  border-radius: 7px !important;
+  background-color: #17191c !important;
+  color: #dedfe2 !important;
+  font-size: 14px !important;
+  transition: color 150ms ease, background-color 150ms ease;
+}
+[data-atlas-gray-control] button[aria-pressed="true"],
+[data-atlas-gray-control] button[data-state="on"],
+[data-atlas-gray-control] button.active,
+[data-atlas-gray-control] button[class*="bg-accent-muted"] {
+  border-color: #f1f2f3 !important;
+  background-color: #f1f2f3 !important;
+  color: #101113 !important;
+}
+[data-atlas-gray-control] input[type="range"] {
+  min-width: 120px;
+  min-height: 42px;
+  accent-color: #e8e9eb;
+  touch-action: pan-x;
+}
+[data-atlas-gray-control] input[type="range"]::-webkit-slider-thumb { width: 20px; height: 20px; }
+[data-atlas-gray-control] input[type="range"]::-moz-range-thumb { width: 20px; height: 20px; }
+[data-atlas-gray-control] :focus-visible { outline: 2px solid #e8e9eb; outline-offset: 2px; }
+
+@media (max-width: 520px) {
+  html[data-atlas-svm-view="chart2d"] [data-testid="inspector-chart2d"] > section:has([data-atlas-gray-control]) {
+    padding: 2px 12px !important;
+  }
+  [data-atlas-gray-control] { gap: 2px !important; }
+  [data-atlas-gray-control] button { margin-block: -9px !important; }
+  [data-atlas-gray-control] input[type="range"] { min-width: 100px; }
+}

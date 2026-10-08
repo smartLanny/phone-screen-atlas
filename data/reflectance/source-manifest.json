@@ -880,5 +880,16 @@
         900
       ]
     }
-  ]
+  ],
+  "rawSource": {
+    "id": "instrument-xml-phone-samples",
+    "sourceKind": "instrument-xml",
+    "exportFile": "raw/phone-samples.json",
+    "exportSha256": "c71104dc8756ea636267e3a96c987f2527d31f004515e17eea9582ad363390db",
+    "sourceFilename": "反射率.xml",
+    "sourceSha256": "6e5a3309401ab5cbe83631d55d99e17b055c25f9cd80c135c112879187a73408",
+    "sourceBytes": 698125,
+    "sampleCount": 32,
+    "phoneCount": 24
+  }
 }

@@ -6,50 +6,13 @@
 <meta name="color-scheme" content="dark">
 <title>可视角度仿真</title>
 <link rel="stylesheet" href="style.css?v=15">
-<style>
-html {background:#101319 !important;}
-body {background:url(../../assets/watermark.svg) no-repeat left 20px bottom -102px / 400px 240px,radial-gradient(ellipse at 35% 45%,#1d222c 0%,#101319 70%) !important;}
-body > *:not(#gl):not(#atlasControls):not(#atlasPhoneLabels):not(script):not(style) {display:none !important;}
-#gl {outline:none;}
-#atlasControls {position:absolute;right:0;top:0;bottom:0;width:320px;z-index:2;background:#11151c;border-left:1px solid #272d39;overflow:auto;}
-#atlasPhoneLabels {position:fixed;inset:0;z-index:1;pointer-events:none;}
-.atlas-phone-label {position:fixed;transform:translate(-50%,-100%);width:max-content;max-width:calc(100vw - 24px);padding:4px 8px;border:1px solid #343d4d;border-radius:6px;background:#171d27e8;color:#dce5f5;text-align:center;white-space:normal;font-size:11px;line-height:1.25;font-weight:550;box-shadow:0 2px 10px #0005;}
-.atlas-phone-label[data-slot="1"] {border-color:#79583f;color:#f0c39e;}
-body[data-compare="true"] .atlas-phone-label {max-width:calc(50vw - 16px);}
-#atlasControls #secPad {display:block !important;padding:20px 18px;border:0;}
-#atlasControls .pad-wrap {flex-direction:column;align-items:center;}
-#atlasControls #pad,#atlasPad1 {display:block;width:100%;max-width:280px;aspect-ratio:1;touch-action:none;cursor:crosshair;}
-.atlas-pad-label {margin:0 0 8px;font-size:12px;font-weight:500;color:#a8b3c5;}
-#atlasPadCard1 {display:none;}
-body[data-compare="true"] #atlasControls {width:560px;}
-body[data-compare="true"] .pad-grid {display:grid;grid-template-columns:1fr 1fr;gap:0 12px;}
-body[data-compare="true"] #atlasPadCard1 {display:flex;}
-body[data-compare="true"] .pad-side {grid-column:1/-1;}
-body[data-compare="true"] #atlasControls #pad,body[data-compare="true"] #atlasPad1 {max-width:260px;}
-body[data-compare="true"] #atlasPadLabel1 {color:#d9a57e;}
-body[data-compare="true"] #atlasPadLabel0 {color:#9aaeff;}
-#atlasControls .pad-read {font-size:11px;}
-#atlasControls .mini-select {font-size:10px;}
-#atlasControls .angle-row .chips button {font-size:10px;padding:5px 7px;}
-@media(min-width:701px) and (max-width:1100px){
- body[data-compare="true"] {background-position:0 222px,center !important;}
- #atlasControls {left:0;right:0;top:420px;width:auto;border-left:0;border-top:1px solid #272d39;}
-}
-@media(max-width:700px){
- body {background-position:0 222px,center !important;}
- #atlasControls {left:0;right:0;top:420px;bottom:0;width:auto;border-left:0;border-top:1px solid #272d39;}
- #atlasControls #secPad {padding:10px 12px;max-width:420px;margin:auto;}
- #atlasControls #pad {max-width:220px;}
- body[data-compare="true"] #atlasControls {width:auto;}
- body[data-compare="true"] .pad-grid {grid-template-columns:1fr;}
- body[data-compare="true"] #atlasControls #pad,body[data-compare="true"] #atlasPad1 {max-width:190px;}
- body[data-compare="true"] #atlasPadCard1 {margin-top:10px;}
-}
-</style><script>window.ATLAS_EMBED=true;</script></head>
+<link rel="stylesheet" href="embed-style.css?v=20261008-angle4">
+<script>window.ATLAS_EMBED=true;</script>
+</head>
 <body data-layout="wide">
 <div class="sframe" id="sf0"></div>
 <div class="sframe" id="sf1"></div>
-<canvas id="gl" aria-label="手机屏幕可视角仿真画面"></canvas><div id="atlasPhoneLabels" aria-hidden="true"></div>
+<canvas id="gl" aria-label="手机屏幕可视角仿真画面"></canvas>
 <div id="scene3d" aria-label="三维场景演示"></div>
 <!-- 三维场景演示（做动画用）：默认不显示，从“画面 → 更多”进入；进入后顶部出现这个切换，可回到屏幕仿真 -->
 <nav class="app-mode seg" id="appMode" aria-label="模式">
@@ -90,11 +53,8 @@ body[data-compare="true"] #atlasPadLabel0 {color:#9aaeff;}
           <button data-v="jncd">色偏</button>
         </div>
       </div>
-      <div class="pad-grid">
-        <div class="pad-wrap" id="atlasPadCard0"><h3 class="atlas-pad-label" id="atlasPadLabel0"></h3>
-          <canvas id="pad" aria-label="观看方向：拖动设置眼睛相对屏幕的位置"></canvas>
-        </div>
-        <div class="pad-wrap atlas-second" id="atlasPadCard1"><h3 class="atlas-pad-label" id="atlasPadLabel1"></h3><canvas id="atlasPad1"></canvas><div class="pad-read" id="atlasPadRead1"></div></div><div class="pad-side">
+      <div class="atlas-embed-shell">
+        <div class="pad-side">
           <div class="pad-legend">
             <div class="pad-scale">
               <div class="ramp" id="padRamp"></div>
@@ -111,6 +71,37 @@ body[data-compare="true"] #atlasPadLabel0 {color:#9aaeff;}
               <button data-t="70">70°</button>
             </div>
             <button id="sweep" class="play" title="自动扫描 0°→70°（空格）"><span class="ico"></span><span class="lbl">扫描</span></button>
+          </div>
+        </div>
+        <div class="atlas-groups" id="atlasGroups">
+          <div class="atlas-device-group" id="atlasGroup0">
+            <div class="atlas-phone-slot" id="atlasPhoneSlot0">
+              <h3 class="atlas-device-label" id="atlasDeviceLabel0"></h3>
+              <div class="atlas-phone-view" id="atlasPhoneView0"></div>
+              <div class="seg atlas-privacy-toggle" id="atlasPrivacy0" role="group" aria-label="防窥状态">
+                <button type="button" data-atlas-slot="0" data-atlas-privacy="0" aria-pressed="true">默认</button>
+                <button type="button" data-atlas-slot="0" data-atlas-privacy="1" aria-pressed="false">防窥模式</button>
+              </div>
+            </div>
+            <div class="pad-wrap atlas-pad-card" id="atlasPadCard0">
+              <h3 class="atlas-pad-label" id="atlasPadLabel0"></h3>
+              <canvas id="pad" aria-label="观看方向：拖动设置眼睛相对屏幕的位置"></canvas>
+            </div>
+          </div>
+          <div class="atlas-device-group" id="atlasGroup1">
+            <div class="atlas-phone-slot" id="atlasPhoneSlot1">
+              <h3 class="atlas-device-label" id="atlasDeviceLabel1"></h3>
+              <div class="atlas-phone-view" id="atlasPhoneView1"></div>
+              <div class="seg atlas-privacy-toggle" id="atlasPrivacy1" role="group" aria-label="防窥状态">
+                <button type="button" data-atlas-slot="1" data-atlas-privacy="0" aria-pressed="true">默认</button>
+                <button type="button" data-atlas-slot="1" data-atlas-privacy="1" aria-pressed="false">防窥模式</button>
+              </div>
+            </div>
+            <div class="pad-wrap atlas-pad-card" id="atlasPadCard1">
+              <h3 class="atlas-pad-label" id="atlasPadLabel1"></h3>
+              <canvas id="atlasPad1" aria-label="观看方向：拖动设置眼睛相对屏幕的位置"></canvas>
+              <div class="pad-read" id="atlasPadRead1"></div>
+            </div>
           </div>
         </div>
       </div>
@@ -248,6 +239,6 @@ body[data-compare="true"] #atlasPadLabel0 {color:#9aaeff;}
 <script src="phone3d.js?v=20261008-mate90-look"></script>
 <script src="viz.js?v=12"></script>
 <!-- 三维场景（scene3d-person.js、scene3d.js）只在进入场景演示时再加载，见 app.js -->
-<aside id="atlasControls" aria-label="原版观看方向"></aside><script src="embed-app.js?v=20261008-mate90-layout2"></script>
+<aside id="atlasControls" aria-label="可视角度与观看方向"></aside><script src="embed-app.js?v=20261008-angle4"></script>
 </body>
 </html>

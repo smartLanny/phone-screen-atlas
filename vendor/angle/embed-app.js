@@ -1,6 +1,7 @@
 (function () {
   'use strict';
   let atlasConnected = false;
+  let atlasPhoneSlots = [];
 
   const DATA = window.ANG_DATA;
   const SPECS = window.DEVICE_SPECS;
@@ -175,10 +176,8 @@
   /** 舞台可用区域（去掉左右栏 / 底部抽屉 / 左上角读数）。 */
   function stageRect() {
     if (window.ATLAS_EMBED) {
-      const controls = $('atlasControls').getBoundingClientRect();
-      return controls.top > 0
-        ? {x0:8, x1:canvas.clientWidth-8, top:42, bottom:controls.top-30}
-        : {x0:8, x1:controls.left-12, top:42, bottom:canvas.clientHeight-30};
+      const stage = $('atlasGroups').getBoundingClientRect();
+      return { x0: stage.left, x1: stage.right, top: stage.top, bottom: stage.bottom };
     }
     const W = canvas.clientWidth, H = canvas.clientHeight, L = document.body.dataset.layout;
     const rc = (id) => $(id).getBoundingClientRect();
@@ -207,7 +206,14 @@
     const sides = S.stereo ? (S.cross ? [1, -1] : [-1, 1]) : devs.map(() => 0);
     const gap = S.stereo ? S.gap : 0;
     const colMax = S.stereo ? (areaW - gap) / 2 : areaW / n;
-    const halfW = colMax / 2 - (S.stereo ? 10 : (window.ATLAS_EMBED ? 8 : 16)), halfH = avail / 2;
+    const embedRects = window.ATLAS_EMBED
+      ? devs.map((_, i) => $('atlasPhoneView' + i).getBoundingClientRect()) : null;
+    const halfW = embedRects
+      ? Math.min(...embedRects.map((r) => r.width / 2)) - 7
+      : colMax / 2 - (S.stereo ? 10 : 16);
+    const halfH = embedRects
+      ? Math.min(...embedRects.map((r) => r.height / 2)) - 6
+      : avail / 2;
     const D = S.dist;
     const span = (mat) => {
       let mx = 0, my = 0;
@@ -231,7 +237,7 @@
     // 取各偏转姿态包络；近距离大角度时包络会过小，此时允许少量超出、由裁剪处理。
     let fEnv = extent(flat);
     let [mxE, myE] = span(flat);
-    for (let mag = 10; mag <= MAX_TILT; mag += 5) {
+    if (!window.ATLAS_EMBED) for (let mag = 10; mag <= MAX_TILT; mag += 5) {
       for (let k = 0; k < 16; k++) {
         const a = k * Math.PI / 8;
         const m = modelMatrix([mag * Math.cos(a), mag * Math.sin(a)]);
@@ -248,21 +254,30 @@
       f = Math.min(halfW / mxE, halfH / myE) * S.size;
       colW = Math.min(colMax, 2 * mxE * f + 16);
     }
-    const centers = S.stereo
-      ? [areaX0 + areaW / 2 - (colW + gap) / 2, areaX0 + areaW / 2 + (colW + gap) / 2]
-      : devs.map((_, i) => areaX0 + (i + 0.5) * colW);
-    const envH = (window.ATLAS_EMBED ? span(modelMatrix())[1] : myE) * f;
+    const centers = embedRects
+      ? embedRects.map((r) => r.left + r.width / 2)
+      : S.stereo
+        ? [areaX0 + areaW / 2 - (colW + gap) / 2, areaX0 + areaW / 2 + (colW + gap) / 2]
+        : devs.map((_, i) => areaX0 + (i + 0.5) * colW);
+    const envH = myE * f;
     const cy = top + halfH;
     const bottomY = Math.min(top + 2 * halfH, cy + envH + 8);
     const frameTop = S.stereo ? Math.max(top - 10, cy - envH - 10) : top;
-    views = devs.map((d, i) => ({
-      dev: d, W, H, f, D, w: colW, x0: centers[i] - colW / 2, x1: centers[i] + colW / 2,
-      cx: centers[i], cy, top: frameTop, bottomY,
-      eye: eyePos(sides[i]), side: sides[i],
-    }));
+    views = devs.map((d, i) => {
+      const rect = embedRects?.[i];
+      return {
+        dev: d, W, H, f, D, w: rect?.width ?? colW,
+        x0: rect?.left ?? centers[i] - colW / 2,
+        x1: rect?.right ?? centers[i] + colW / 2,
+        cx: centers[i], cy: rect ? rect.top + rect.height / 2 : cy,
+        top: rect?.top ?? frameTop, bottomY: rect?.bottom ?? bottomY,
+        eye: eyePos(sides[i]), side: sides[i],
+      };
+    });
     // 舞台聚光跟着手机走；提示文字居中于舞台
-    document.documentElement.style.setProperty('--sx', ((areaX0 + areaW / 2) / W * 100).toFixed(1) + '%');
-    $('hint').style.left = areaX0 + areaW / 2 + 'px';
+    const stageCenter = embedRects ? embedRects.reduce((n, r) => n + r.left + r.width / 2, 0) / embedRects.length : areaX0 + areaW / 2;
+    document.documentElement.style.setProperty('--sx', (stageCenter / W * 100).toFixed(1) + '%');
+    $('hint').style.left = stageCenter + 'px';
     return views;
   }
   // ---------- WebGL ----------
@@ -679,33 +694,12 @@
     gl.uniform2f(prog.u.uDepth, k1, k2);
   }
 
-  function updateAtlasPhoneLabels(ids, M) {
-    const root = $('atlasPhoneLabels');
-    while (root.children.length < ids.length) {
-      const label = document.createElement('div');
-      label.className = 'atlas-phone-label';
-      root.appendChild(label);
-    }
-    while (root.children.length > ids.length) root.lastElementChild.remove();
-    ids.forEach((id, i) => {
-      const profile = byId(id), view = views[i], label = root.children[i];
-      const mode = profile.privacy ? (profile.privacyKind === 'film' ? '贴防窥膜' : '防窥开启') : '默认';
-      label.dataset.slot = String(i);
-      label.textContent = `${profile.device.replace(' GH3', '')} · ${mode}`;
-      label.style.left = `${view.cx}px`;
-      const top = Math.min(...view.dev.corners.map(c => {
-        const w = apply(M, c);
-        return view.cy - view.f * w[1] / (view.D - w[2]);
-      }));
-      label.style.top = `${Math.max(label.getBoundingClientRect().height + 8, top - 8)}px`;
-    });
-  }
   function render() {
     applyPalette();
     const M = modelMatrix();
     const ids = S.stereo ? [activeIds()[0], activeIds()[0]] : activeIds();
+    if (window.ATLAS_EMBED) atlasUpdateIdentity(ids);
     computeViews(ids.map((id) => dev(byId(id).device)));
-    if (window.ATLAS_EMBED) updateAtlasPhoneLabels(ids, M);
     placeFrames();
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0, 0, 0, 0);
@@ -858,12 +852,12 @@
   const padRead = document.createElement('div');
   padRead.className = 'pad-read';
   document.querySelector('#secPad .pad-side').prepend(padRead);
+  let padHover = null;
   const pad = Viz.createPad($('pad'), {
     maxTheta: MAX_TILT,
     onInput(theta, psi) { stopSweep(); setView(theta, psi); },
     onHover(h) { padHover = h; updatePadRead(); },
   });
-  let padHover = null;
   const atlasPad1 = Viz.createPad($('atlasPad1'), {
     maxTheta: MAX_TILT,
     onInput(theta, psi) { stopSweep(); setView(theta, psi); },
@@ -887,43 +881,40 @@
   $('palette').addEventListener('change', (e) => { S.pal = e.target.value; requestRender(); });
 
   function updatePadRead() {
-    activeIds().forEach((id, i) => {
-    const g = getGrid(id), mf = metricFmt[S.padMetric];
     const h = padHover || { theta: S.theta, psi: S.psi };
     const where = h.theta < 0.5 ? '正对' : `${Math.round(h.theta)}° ${Viz.dirName(h.psi)}`;
-    const who = S.compare ? `<span class="key" style="--k:${SERIES[i]}"></span>` : '';
-    const v = g[S.padMetric](h.theta, h.psi + S.rot);
-    (i === 0 ? padRead : $('atlasPadRead1')).innerHTML = `${who}<span class="dim">${padHover ? '指针处' : '当前'}</span> ${where} · <b>${mf.fmt(v)}</b>`;
+    activeIds().forEach((id, i) => {
+      const g = getGrid(id), mf = metricFmt[S.padMetric];
+      const v = g[S.padMetric](h.theta, h.psi + S.rot);
+      const slot = atlasPhoneSlots[i] ?? i;
+      const key = S.compare ? `<span class="key" data-slot="${slot}"></span>` : '';
+      const readout = i === 0 ? padRead : $('atlasPadRead1');
+      readout.innerHTML = `${key}<span class="dim">${padHover ? '指针处' : '当前'}</span> ${where} · <b>${mf.fmt(v)}</b>`;
     });
   }
 
   function updatePad(M) {
     activeIds().forEach((id, i) => {
-    const directionPad = i === 0 ? pad : atlasPad1;
-    const profile = byId(id);
-    const mode = profile.privacy ? (profile.device.startsWith('iPhone') ? '防窥膜' : '防窥模式') : '默认';
-    $('atlasPadLabel' + i).textContent = profile.device.replace(' GH3', '') + ' · ' + mode;
-    $(i === 0 ? 'pad' : 'atlasPad1').setAttribute('aria-label', profile.device + '观看方向：拖动设置眼睛相对屏幕的位置');
-    const m = getModel(id), g = getGrid(id), mf = metricFmt[S.padMetric];
-    applyPalette();
-    directionPad.setField(`${id}|${S.padMetric}|${S.pal}`, (th, psi) => mf.t(g[S.padMetric](th, psi)), { pal: S.pal, levels: mf.levels });
-    $('padRamp').style.background = Viz.paletteCSS(S.pal, mf.levels, false);
-    const spokes = m.lines.filter((l) => !l.virtual).map((l) => l.psi);
-    const hatch = [];
-    m.lines.forEach((l, i) => {
-      const n = m.lines[(i + 1) % m.lines.length];
-      if (l.virtual || n.virtual) hatch.push([l.psi, l.psi + (AngleModel.norm360(n.psi - l.psi) || 360)]);
-    });
-    let eyes = null;
-    if (S.stereo) {
-      eyes = [-1, 1].map((s) => {
-        const a = anglesOf(applyT(M, eyePos(s)));
-        return [a.theta, a.psi - S.rot];
+      const directionPad = i === 0 ? pad : atlasPad1;
+      const m = getModel(id), g = getGrid(id), mf = metricFmt[S.padMetric];
+      directionPad.setField(`${id}|${S.padMetric}|${S.pal}`, (th, psi) => mf.t(g[S.padMetric](th, psi)), { pal: S.pal, levels: mf.levels });
+      const spokes = m.lines.filter((l) => !l.virtual).map((l) => l.psi);
+      const hatch = [];
+      m.lines.forEach((l, j) => {
+        const n = m.lines[(j + 1) % m.lines.length];
+        if (l.virtual || n.virtual) hatch.push([l.psi, l.psi + (AngleModel.norm360(n.psi - l.psi) || 360)]);
       });
-    }
-    directionPad.update({ theta: S.theta, psi: S.psi, rot: S.rot, spokes, hatch, eyes });
-    $('padTicks').innerHTML = mf.ticks.map((t) => `<span>${t}</span>`).join('');
+      let eyes = null;
+      if (S.stereo) {
+        eyes = [-1, 1].map((side) => {
+          const a = anglesOf(applyT(M, eyePos(side)));
+          return [a.theta, a.psi - S.rot];
+        });
+      }
+      directionPad.update({ theta: S.theta, psi: S.psi, rot: S.rot, spokes, hatch, eyes });
     });
+    $('padRamp').style.background = Viz.paletteCSS(S.pal, metricFmt[S.padMetric].levels, false);
+    $('padTicks').innerHTML = metricFmt[S.padMetric].ticks.map((t) => `<span>${t}</span>`).join('');
     updatePadRead();
   }
 
@@ -1098,9 +1089,22 @@
     if (window.ATLAS_EMBED) {
       document.body.dataset.layout = 'embed';
       const controls = $('atlasControls');
-      if ($('secPad').parentElement !== controls) controls.appendChild($('secPad'));
-      document.body.dataset.compare = String(S.compare);
+      const section = $('secPad');
+      if (section.parentElement !== controls) controls.appendChild(section);
+      const shell = section.querySelector('.atlas-embed-shell');
+      const heading = section.querySelector('.sec-head');
+      const shared = shell.querySelector('.pad-side');
+      const groups = $('atlasGroups');
+      let toolbar = shell.querySelector('.atlas-shared-toolbar');
+      if (!toolbar) {
+        toolbar = document.createElement('div');
+        toolbar.className = 'atlas-shared-toolbar';
+      }
+      toolbar.append(heading, shared);
+      shell.append(groups, toolbar);
       if (padRead.parentElement !== $('atlasPadCard0')) $('atlasPadCard0').appendChild(padRead);
+      atlasUpdateIdentity(activeIds());
+      atlasReportHeight();
       return;
     }
     const W = window.innerWidth, H = window.innerHeight;
@@ -1175,12 +1179,13 @@
   canvas.addEventListener('pointerleave', () => { hover = null; updateTip(); });
   canvas.addEventListener('dblclick', resetTilt);
   canvas.addEventListener('wheel', (e) => {
+    if (window.ATLAS_EMBED) return;
     e.preventDefault();
     setDist((S.dist / 10) * Math.exp(e.deltaY * 0.001));
   }, { passive: false });
   window.addEventListener('keydown', (e) => {
     if (appMode === 'scene' || (window.ATLAS_EMBED && /^[pPhH]$/.test(e.key))) return;   // 场景演示模式下快捷键交给三维场景
-    if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName) || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.target.closest('input,select,textarea,button,a[href],[role=button],[role=slider],[contenteditable=true]') || e.ctrlKey || e.metaKey || e.altKey) return;
     const k = { ArrowLeft: [-2, 0], ArrowRight: [2, 0], ArrowUp: [0, 2], ArrowDown: [0, -2] }[e.key];
     if (k) { e.preventDefault(); stopSweep(); setTilt(S.tilt[0] + k[0], S.tilt[1] + k[1]); return; }
     switch (e.key) {
@@ -1458,37 +1463,104 @@
   // 调试 / 截图用
   window.viewAngle = { S, setView, animateTo, setClean, setDist, getModel, render: () => render() };
 
-  // Embed the original direction pad and its existing input handlers.
   function atlasNotify() {
-    if (atlasConnected) parent.postMessage({type:'atlas-angle-change',theta:S.theta,psi:S.psi,padMetric:S.padMetric,pal:S.pal},location.origin);
+    if (atlasConnected) parent.postMessage({ type: 'atlas-angle-change', theta: S.theta, psi: S.psi, padMetric: S.padMetric, pal: S.pal }, location.origin);
   }
+  function atlasUpdateIdentity(ids) {
+    if (!window.ATLAS_EMBED) return;
+    document.body.dataset.count = String(ids.length);
+    document.body.dataset.compare = String(ids.length > 1);
+    ids.forEach((id, i) => {
+      const profile = byId(id), slot = atlasPhoneSlots[i] ?? i;
+      const phoneLabel = $('atlasDeviceLabel' + i), padLabel = $('atlasPadLabel' + i);
+      const group = $('atlasGroup' + i), toggle = $('atlasPrivacy' + i);
+      group.hidden = false;
+      group.dataset.slot = String(slot);
+      phoneLabel.dataset.slot = String(slot);
+      padLabel.dataset.slot = String(slot);
+      const displayDevice = profile.device.replace(/ GH3$/, '');
+      phoneLabel.textContent = displayDevice;
+      padLabel.textContent = displayDevice;
+      toggle.setAttribute('aria-label', `${displayDevice}防窥状态`);
+      $(i === 0 ? 'pad' : 'atlasPad1').setAttribute('aria-label', `${displayDevice}观看方向：拖动设置眼睛相对屏幕的位置`);
+      const off = variant(profile.device, false), on = variant(profile.device, true);
+      toggle.hidden = !off || !on;
+      if (off && on) {
+        const onLabel = on.privacyKind === 'film' ? '防窥膜' : '防窥模式';
+        toggle.querySelector('[data-atlas-privacy="0"]').textContent = '默认';
+        toggle.querySelector('[data-atlas-privacy="1"]').textContent = onLabel;
+        toggle.querySelectorAll('[data-atlas-privacy]').forEach((button) => {
+          const selected = button.dataset.atlasPrivacy === String(+profile.privacy);
+          button.classList.toggle('on', selected);
+          button.setAttribute('aria-pressed', String(selected));
+        });
+      }
+    });
+    for (let i = ids.length; i < 2; i++) $('atlasGroup' + i).hidden = true;
+    atlasReportHeight();
+  }
+  function atlasReportHeight() {
+    if (!window.ATLAS_EMBED) return;
+    requestAnimationFrame(() => {
+      const controls = $('atlasControls');
+      const height = Math.ceil(controls.getBoundingClientRect().bottom + window.scrollY + 8);
+      if (height > 0 && height !== atlasLastHeight) {
+        atlasLastHeight = height;
+        parent.postMessage({ type: 'atlas-angle-height', height }, location.origin);
+      }
+    });
+  }
+  let atlasLastHeight = 0;
+  document.addEventListener('click', (event) => {
+    const button = event.target.closest('[data-atlas-privacy]');
+    if (!button || !atlasConnected) return;
+    const index = Number(button.dataset.atlasSlot), id = activeIds()[index], profile = byId(id);
+    if (!profile || !hasPrivacy(profile.device)) return;
+    parent.postMessage({
+      type: 'atlas-angle-privacy', device: profile.device,
+      privacy: button.dataset.atlasPrivacy === '1',
+    }, location.origin);
+  });
   S.clean = true;
   document.body.classList.add('clean');
   $('padMetric').addEventListener('click', atlasNotify);
   $('palette').addEventListener('change', atlasNotify);
   window.addEventListener('message', (event) => {
-    if (event.origin !== location.origin || event.source !== parent || event.data?.type !== 'atlas-angle-set') return;
+    if (event.origin !== location.origin || event.source !== parent) return;
+    if (event.data?.type === 'atlas-angle-pause') { stopSweep(); cancelAnimationFrame(anim); anim = null; return; }
+    if (event.data?.type !== 'atlas-angle-set') return;
     const data = event.data;
     if (!Array.isArray(data.profiles) || !Number.isFinite(data.theta) || !Number.isFinite(data.psi)) return;
-    const ids = data.profiles.filter(id => typeof id === 'string' && byId(id)).slice(0,2);
+    const ids = data.profiles.filter((id) => typeof id === 'string' && byId(id)).slice(0, 2);
     if (!ids.length) return;
+    stopSweep(); cancelAnimationFrame(anim); anim = null;
     atlasConnected = true;
+    atlasPhoneSlots = Array.isArray(data.phoneSlots)
+      ? ids.map((_, i) => data.phoneSlots[i] === 1 ? 1 : 0)
+      : ids.map((_, i) => i);
     S.device = byId(ids[0]).device;
     S.privacy = byId(ids[0]).privacy;
     S.compare = ids.length === 2;
-    S.slots = ids.length === 2 ? ids : [ids[0],ids[0]];
+    S.slots = ids.length === 2 ? ids : [ids[0], ids[0]];
     S.stereo = false;
     S.dist = 300;
     S.colors['小米 18 Pro Max'] = 'blue';
     S.colors['iPhone 18 Pro Max GH3'] = 'silver';
     if (data.padMetric === 'lum' || data.padMetric === 'jncd') S.padMetric = data.padMetric;
-    if (typeof data.pal === 'string' && Object.hasOwn(Viz.PALETTES,data.pal)) S.pal = data.pal;
+    if (typeof data.pal === 'string' && Object.hasOwn(Viz.PALETTES, data.pal)) S.pal = data.pal;
     syncSeg('padMetric', S.padMetric);
     syncProfileUI();
     loadPattern(data.pattern === 'dark' ? 'dark' : 'ui');
-    setView(data.theta,data.psi);
+    setView(data.theta, data.psi);
     resize();
+    atlasReportHeight();
   });
-  window.addEventListener('wheel', e => e.stopImmediatePropagation(), {capture:true});
-  parent.postMessage({type:'atlas-angle-ready'},location.origin);
+  window.addEventListener('resize', atlasReportHeight);
+  if ('ResizeObserver' in window) {
+    const atlasObserver = new ResizeObserver(atlasReportHeight);
+    atlasObserver.observe($('atlasControls'));
+  }
+  window.addEventListener('wheel', (event) => event.stopImmediatePropagation(), { capture: true });
+  parent.postMessage({ type: 'atlas-angle-ready' }, location.origin);
+  atlasReportHeight();
 })();

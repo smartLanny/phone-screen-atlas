@@ -1,10 +1,10 @@
 # 频闪数据
 
-本目录保存 `smartLanny/svm-full-range-visualizer` 分支 `claude/brave-archimedes-bd546k` 的 16 份原始记录与默认降噪显示结果。固定来源提交：`4189c501004904a494a35ae438dda761cff2be0c`。完整归因、模块校验值与处理方式见 `source.json`，许可原文见 `LICENSE`（MIT）。
+本目录保存 `smartLanny/svm-full-range-visualizer` 分支 `claude/brave-archimedes-bd546k` 的 17 份原始记录与默认降噪显示结果。固定来源提交：`48bf54c6d52a20179e5471d63e18717d8602c934`。完整归因、模块校验值与处理方式见 `source.json`，许可原文见 `LICENSE`（MIT）。Mate 90 原始表格范围、导出 SHA-256 和缺测数量也记录在 `source.json`。
 
 ## 文件入口
 
-- `index.json`：`{schemaVersion, fixedGrayKeys, sourceFile, records}`，`records` 保持原 manifest 次序；每条含 `device`、`mode`、`id`、`rawFile`、`processedFile` 等。
+- `index.json`：`{schemaVersion, fixedGrayKeys, sourceFile, records}`，`records` 保持原 manifest 次序；每条含 `device`、`mode`、`id`、`rawFile`、`processedFile`、`displayedDataPoints` 等。`displayedDataPoints` 按处理后矩阵的 G255 `headerNits` 轴计算 `0–500 nits` 内的有效格数，和原 bundle 的 `maxNits: 500` 口径一致。
 - `manifest.original.json`：源 manifest 原始字节。
 - `raw/<file>.json`：源记录原始字节，保留其 `excluded` 字段。
 - `processed/<file>.json`：线上 `processRecord(raw, {denoise:true})` 的结果与状态；未新增统计综合分或健康排名。
@@ -47,7 +47,7 @@
 
 `cellStatus[r][c]` 与 `noteGrid[r][c]` 使用 `record.matrix` 的原始行列顺序。
 
-固定灰阶使用全部 16 表共同实测行中最接近 G32 / G128 / G255 的 **G34 / G124 / G255**。这些曲线未新增灰阶插值。每个 `points` 数组包含全部 18 列（无效格保留，不能先过滤再连线）：
+固定灰阶使用全部 17 表共同实测行中最接近 G32 / G128 / G255 的 **G34 / G124 / G255**。这些曲线未新增灰阶插值。每个 `points` 数组包含全部 18 列（无效格保留，不能先过滤再连线）：
 
 ```js
 {

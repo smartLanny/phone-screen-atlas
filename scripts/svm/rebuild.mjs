@@ -90,7 +90,7 @@ const writeJson = async (file, data, pretty = false) => {
   }
   else await fs.writeFile(file, text);
 };
-const sha = '4189c501004904a494a35ae438dda761cff2be0c';
+const sha = '48bf54c6d52a20179e5471d63e18717d8602c934';
 const repository = 'https://github.com/smartLanny/svm-full-range-visualizer';
 const branch = 'claude/brave-archimedes-bd546k';
 const modules = ['types', 'grid', 'anomalies', 'denoise'];
@@ -122,9 +122,34 @@ const source = {
     runtime: `Node ${process.version}; node:module stripTypeScriptTypes(mode: transform)`,
     adaptation: 'Only TypeScript transpilation and relative runtime import extensions changed; processing algorithm unchanged.',
     fixedGrays: grays,
-    graySelection: 'Nearest rows shared by all 16 source matrices to G32/G128/G255; no added gray interpolation.',
+    graySelection: 'Nearest rows shared by all 17 source matrices to G32/G128/G255; no added gray interpolation.',
     axis: 'x = processed matrix.headerNits (G255 white-field level luminance), y = svm',
   },
+  dataImports: [{
+    provider: 'Feishu spreadsheet CSV export',
+    workbookTitle: '华为 Mate 90 Pro Max 典藏版 测试图表',
+    sheetTitle: '华为 Mate 90 Pro Max 典藏版 全灰阶 SVM',
+    sheetId: 'ZqTkQh',
+    exportRange: 'A1:AK54',
+    exportSha256: '2781b243035bf9280ccc3739ae92422f8b0704b69626491d6d11d9e9ef502c1f',
+    matrixRange: 'A4:AK27',
+    device: '华为 Mate 90 Pro Max 典藏版',
+    mode: '默认',
+    measuredCells: 72,
+    missingCells: 360,
+    zeroNitsCellsPreserved: 3,
+    cellNitsAtOrBelow500: 62,
+    g255HeaderNitsMeasured: [923.08, 714.9, 590.98],
+    displayedDataPointsAtMaxNits500: 0,
+    unusedTemplate: {
+      range: 'A28:AK54',
+      matrixRange: 'A31:AK54',
+      residualTitle: '华为 Mate 90 Pro Max 典藏版 屏幕低频闪',
+      comparedMatrixPairs: 432,
+      measuredCells: 0,
+      disposition: 'Unused blank template; user confirmed the phone has no separate low-flicker mode.',
+    },
+  }],
 };
 if (checkOnly) {
   const savedSource = JSON.parse(await fs.readFile(path.join(output, 'source.json'), 'utf8'));
@@ -203,6 +228,10 @@ for (const entry of manifest) {
     grayKeys: grays.map(String),
     rows: raw.matrix.rows.length, columns: raw.matrix.cols.length,
     originalDataPoints: raw.data.length, storedExcludedPoints: raw.excluded?.length ?? 0,
+    displayedDataPoints: record.matrix.grid.reduce((sum, row) => sum + row.reduce((count, point, c) => {
+      const nits = record.matrix.headerNits[c];
+      return Number.isFinite(nits) && nits >= 0 && nits <= 500 && point ? count + 1 : count;
+    }, 0), 0),
     sourceSha256: digest(bytes),
   };
   records.push(indexEntry);
