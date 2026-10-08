@@ -1,0 +1,27 @@
+{
+  "repository": "https://github.com/smartLanny/svm-full-range-visualizer",
+  "branch": "claude/brave-archimedes-bd546k",
+  "commit": "4189c501004904a494a35ae438dda761cff2be0c",
+  "sourcePath": "release/SVM-Visualizer.html",
+  "sourceUrl": "https://github.com/smartLanny/svm-full-range-visualizer/blob/4189c501004904a494a35ae438dda761cff2be0c/release/SVM-Visualizer.html",
+  "originalSha256": "ca7291083c7e9e02c93f689473b2792b87223e9bbee5ce40302602b73cc0d90d",
+  "license": "MIT",
+  "copyright": "Copyright (c) 2026 smartLanny and contributors",
+  "modifications": [
+    "Storage key, database and object-store string literals prefixed with atlas-embed.; original calculations and charts unchanged.",
+    "Appended embed.css hides Shell chrome only.",
+    "Appended bridge.js controls original window.__svm.store via validated same-origin parent messages.",
+    "Original top-view heatmap is the default; maxNits is fixed to 500; original axes/colorbar/contours stay enabled while numeric labels and redundant titles are disabled."
+  ],
+  "persistenceSourcesInspected": [
+    "src/store/persistence.ts",
+    "src/shell/uiStore.ts",
+    "src/stats/StatsView.tsx",
+    "All 11 localStorage occurrences and both indexedDB occurrences in the pinned release"
+  ],
+  "namespacedPersistenceLiterals": [
+    "settings.v2", "prefs.v2", "userRecords.v2", "bundledEdits.v2", "removedBundled.v2",
+    "svm.persist.pending.v1", "svm.stats.ui", "svm-export-prefs.v1", "svm.shell.ui.v1",
+    "svm-full-range-visualizer", "kv", "keyval-store", "keyval"
+  ]
+}

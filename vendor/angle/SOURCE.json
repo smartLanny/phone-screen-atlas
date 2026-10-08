@@ -1,0 +1,17 @@
+{
+  "repository": "https://github.com/smartLanny/phone-view-angle-sim",
+  "commit": "5ddf95a17b69720bd72bc9941d1f9a6ea42be062",
+  "files": [
+    "index.html",
+    "style.css",
+    "data.js",
+    "model.js",
+    "avatar.js",
+    "patterns.js",
+    "devices.js",
+    "phone3d.js",
+    "viz.js",
+    "app.js"
+  ],
+  "license": "MIT"
+}

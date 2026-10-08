@@ -1,0 +1,19 @@
+{
+  "name": "phone-screen-atlas",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "基于实测数据的手机频闪与可视角统一展示站",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "dev": "node scripts/serve.mjs",
+    "check": "node scripts/check.mjs",
+    "data:svm": "node scripts/svm/rebuild.mjs",
+    "data:audit": "node scripts/svm/audit.mjs",
+    "embed:angle": "python3 scripts/build-angle-embed.py",
+    "embed:svm": "node scripts/build-svm-embed.mjs"
+  }
+}

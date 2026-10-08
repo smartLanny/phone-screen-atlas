@@ -1,0 +1,23 @@
+/* Shell chrome only; original canvases, layouts, axes, legends and interactions stay intact. */
+.shell-header,
+[data-testid="sidebar"],
+[data-testid="inspector"],
+[data-testid="inspector-toggle"],
+[data-testid="settings-panel"],
+[data-testid="export-button"],
+[data-testid="importer"],
+[data-testid="drop-overlay"],
+[data-testid="present-exit"],
+[data-testid="present-hint"],
+[data-testid="scene3d-values-hint"],
+[data-testid="scene3d"] [data-scene-ui] {
+  display: none !important;
+}
+html, body, #root, [data-testid="shell"] {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+html { color-scheme: dark; }
+body { overflow: hidden; background: #07090d; }
+[data-testid="main"] { min-width: 0; }

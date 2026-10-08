@@ -1,0 +1,43 @@
+{
+  "repository": "https://github.com/smartLanny/svm-full-range-visualizer",
+  "branch": "claude/brave-archimedes-bd546k",
+  "commit": "4189c501004904a494a35ae438dda761cff2be0c",
+  "commitUrl": "https://github.com/smartLanny/svm-full-range-visualizer/commit/4189c501004904a494a35ae438dda761cff2be0c",
+  "manifestUrl": "https://github.com/smartLanny/svm-full-range-visualizer/blob/4189c501004904a494a35ae438dda761cff2be0c/public/datasets/manifest.json",
+  "license": "MIT",
+  "copyright": "Copyright (c) 2026 smartLanny and contributors",
+  "licenseFile": "LICENSE",
+  "licenseUrl": "https://github.com/smartLanny/svm-full-range-visualizer/blob/4189c501004904a494a35ae438dda761cff2be0c/LICENSE",
+  "processing": {
+    "module": "src/data/denoise.ts",
+    "call": "processRecord(raw, { denoise: true })",
+    "defaultEvidence": "src/store/appStore.ts:99 (DEFAULT_SETTINGS.denoise = true)",
+    "sourceModules": [
+      {
+        "path": "src/types.ts",
+        "sha256": "ff5cb5ab7c8f488613e5c33cdee818fa11078c0ed7024af5e55738b0d9987e43"
+      },
+      {
+        "path": "src/data/grid.ts",
+        "sha256": "5ebc49ca6a8d25a20685ee53717ae87269e3b517e0e4f2a6eeec5fc710384a0a"
+      },
+      {
+        "path": "src/data/anomalies.ts",
+        "sha256": "d7258dc9f5b8d8e62c041054acf5cd4254e37b4e5e8083c0ccd6caa299db16f1"
+      },
+      {
+        "path": "src/data/denoise.ts",
+        "sha256": "afe9d7859c24d3e4d55997ae5946e9d15e1262adefcec97fa04c7c3e6083fcae"
+      }
+    ],
+    "runtime": "Node v22.23.1; node:module stripTypeScriptTypes(mode: transform)",
+    "adaptation": "Only TypeScript transpilation and relative runtime import extensions changed; processing algorithm unchanged.",
+    "fixedGrays": [
+      34,
+      124,
+      255
+    ],
+    "graySelection": "Nearest rows shared by all 16 source matrices to G32/G128/G255; no added gray interpolation.",
+    "axis": "x = processed matrix.headerNits (G255 white-field level luminance), y = svm"
+  }
+}

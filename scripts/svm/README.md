@@ -1,0 +1,24 @@
+# 离线重建频闪数据
+
+从站点根目录运行：
+
+```sh
+node scripts/svm/rebuild.mjs
+# package.json 可定义 "data:svm": "node scripts/svm/rebuild.mjs"
+npm run data:svm
+```
+
+入口读取 `data/svm/manifest.original.json` 与 `data/svm/raw/`，重建 `processed/`、`index.json` 和 `source.json`。原始文件保持不变。无联网、无第三方依赖，已在 Node **22.23.1** 实际运行。`runtime/` 是使用 Node 内置 `stripTypeScriptTypes` 生成的模块；可删除，下次运行会重建。
+
+仅校验当前结果与离线重建是否逐字一致：
+
+```sh
+node scripts/svm/rebuild.mjs --check
+node scripts/svm/audit.mjs
+```
+
+`audit.mjs` 独立核对原始读数、源校验值、降噪说明、矩阵与三条固定灰阶曲线的逐格关系，以及估计值标记；仅输出聚合结果，不改数据。
+
+`source/*.ts` 是固定来源提交 `4189c501004904a494a35ae438dda761cff2be0c` 的原模块，算法未修改。来源：[smartLanny/svm-full-range-visualizer](https://github.com/smartLanny/svm-full-range-visualizer/tree/4189c501004904a494a35ae438dda761cff2be0c)，分支 `claude/brave-archimedes-bd546k`。原项目 **MIT** 声明见同目录 `LICENSE`；`source.json` 保存模块 SHA-256 与原版权声明。
+
+固定曲线只使用共同实测行 **G34 / G124 / G255**。`headerNits` 是当前显示的白场档位亮度；`levelEstimated:true` 表示该档位经过原算法重估。SVM 插值、当前灰阶亮度估计与白场档位重估分别通过 `interpolated`、`luminanceEstimated`、`levelEstimated` 标明，不能统称实测。
